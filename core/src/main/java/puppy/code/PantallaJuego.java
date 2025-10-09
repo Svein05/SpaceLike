@@ -11,12 +11,15 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 
 public class PantallaJuego implements Screen {
 
 	private SpaceNavigation game;
 	private OrthographicCamera camera;	
+	private Viewport viewport; // Viewport para escalado automático
 	private SpriteBatch batch;
 	private Sound explosionSound;
 	private Music gameMusic;
@@ -43,7 +46,11 @@ public class PantallaJuego implements Screen {
 		
 		batch = game.getBatch();
 		camera = new OrthographicCamera();	
-		camera.setToOrtho(false, 800, 640);
+		camera.setToOrtho(false, 1920, 1080); // Mantener resolución base
+		
+		// Crear viewport con escalado automático
+		viewport = new FitViewport(1920, 1080, camera);
+		
 		//inicializar assets; musica de fondo y efectos de sonido
 		explosionSound = Gdx.audio.newSound(Gdx.files.internal("explosion.ogg"));
 		explosionSound.setVolume(1,0.5f);
@@ -72,15 +79,23 @@ public class PantallaJuego implements Screen {
 	}
     
 	public void dibujaEncabezado() {
-		CharSequence str = "Vidas: "+nave.getVidas()+" Ronda: "+ronda;
+		// Solo mostrar ronda y scores - los corazones se muestran por separado
+		// Usar coordenadas de la cámara 1920x1080
+		CharSequence str = "Ronda: "+ronda;
 		game.getFont().getData().setScale(2f);		
-		game.getFont().draw(batch, str, 10, 30);
-		game.getFont().draw(batch, "Score:"+this.score, Gdx.graphics.getWidth()-150, 30);
-		game.getFont().draw(batch, "HighScore:"+game.getHighScore(), Gdx.graphics.getWidth()/2-100, 30);
+		game.getFont().draw(batch, str, 30, 50); // Más espacio desde los bordes
+		game.getFont().draw(batch, "Score:"+this.score, 1920-300, 50); // Esquina derecha
+		game.getFont().draw(batch, "HighScore:"+game.getHighScore(), 1920/2-150, 50); // Centro
 	}
 	@Override
 	public void render(float delta) {
 		  Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		  
+		  // Actualizar viewport y cámara
+		  viewport.apply();
+		  camera.update();
+		  batch.setProjectionMatrix(camera.combined);
+		  
           batch.begin();
 		  dibujaEncabezado();
 	      if (!nave.estaHerido()) {
@@ -125,6 +140,10 @@ public class PantallaJuego implements Screen {
 	          b.draw(batch);
 	      }
 	      nave.draw(batch, this);
+	      
+	      // Dibujar corazones de vida
+	      nave.renderHealthHearts(batch);
+	      
 	      //dibujar asteroides y manejar colision con nave
 	      for (int i = 0; i < balls1.size(); i++) {
 	    	    Ball2 b=balls1.get(i);
@@ -142,7 +161,7 @@ public class PantallaJuego implements Screen {
   			if (score > game.getHighScore())
   				game.setHighScore(score);
 	    	Screen ss = new PantallaGameOver(game);
-  			ss.resize(1200, 800);
+  			ss.resize(1920, 1080);
   			game.setScreen(ss);
   			dispose();
   		  }
@@ -151,7 +170,7 @@ public class PantallaJuego implements Screen {
 	      if (balls1.size()==0) {
 			Screen ss = new PantallaJuego(game,ronda+1, nave.getVidas(), score, 
 					velXAsteroides+3, velYAsteroides+3, cantAsteroides+10);
-			ss.resize(1200, 800);
+			ss.resize(1920, 1080);
 			game.setScreen(ss);
 			dispose();
 		  }
@@ -170,8 +189,8 @@ public class PantallaJuego implements Screen {
 
 	@Override
 	public void resize(int width, int height) {
-		// TODO Auto-generated method stub
-		
+		// Actualizar viewport cuando cambie el tamaño de ventana
+		viewport.update(width, height);
 	}
 
 	@Override
