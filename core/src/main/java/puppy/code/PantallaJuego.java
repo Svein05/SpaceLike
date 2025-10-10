@@ -33,6 +33,18 @@ public class PantallaJuego implements Screen {
 	private  ArrayList<Ball2> balls1 = new ArrayList<>();
 	private  ArrayList<Ball2> balls2 = new ArrayList<>();
 	private  ArrayList<Bullet> balas = new ArrayList<>();
+	
+	// Fondo parallax
+	private Texture fondoSpaceBackground; // Capa 0 - Space Background
+	private Texture fondoSpaceStars01; // Capa 1 - Space Stars 01
+	private Texture fondoSpaceDust; // Capa 1.1 - Space Dust
+	private Texture fondoNebulose; // Capa 2 - Space Nebulose
+	private Texture fondoSpaceStars03; // Capa 3 - Space Stars 03
+	private float spaceBackgroundOffsetY; // Desplazamiento para Space Background
+	private float spaceStars01OffsetY; // Desplazamiento para Space Stars 01
+	private float spaceDustOffsetY; // Desplazamiento para Space Dust
+	private float nebuloseOffsetY; // Desplazamiento para la capa de nebulosa
+	private float spaceStars03OffsetY; // Desplazamiento para Space Stars 03
 
 
 	public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,  
@@ -50,6 +62,18 @@ public class PantallaJuego implements Screen {
 		
 		// Crear viewport con escalado automático
 		viewport = new FitViewport(1920, 1080, camera);
+		
+		// Cargar texturas para parallax
+		fondoSpaceBackground = new Texture(Gdx.files.internal("Game/Fondo/Backgrounds/PNGs/Split up/00 Space Background.png"));
+		fondoSpaceStars01 = new Texture(Gdx.files.internal("Game/Fondo/Backgrounds/PNGs/Split up/01 Space Stars.png"));
+		fondoSpaceDust = new Texture(Gdx.files.internal("Game/Fondo/Backgrounds/PNGs/Split up/01_1 Space Dust.png"));
+		fondoNebulose = new Texture(Gdx.files.internal("Game/Fondo/Backgrounds/PNGs/Split up/02 Space Nebulose.png"));
+		fondoSpaceStars03 = new Texture(Gdx.files.internal("Game/Fondo/Backgrounds/PNGs/Split up/03 Space Stars.png"));
+		spaceBackgroundOffsetY = 0f; // Inicializar offset Space Background
+		spaceStars01OffsetY = 0f; // Inicializar offset Space Stars 01
+		spaceDustOffsetY = 0f; // Inicializar offset Space Dust
+		nebuloseOffsetY = 0f; // Inicializar offset de la nebulosa
+		spaceStars03OffsetY = 0f; // Inicializar offset Space Stars 03
 		
 		//inicializar assets; musica de fondo y efectos de sonido
 		explosionSound = Gdx.audio.newSound(Gdx.files.internal("explosion.ogg"));
@@ -97,6 +121,86 @@ public class PantallaJuego implements Screen {
 		  batch.setProjectionMatrix(camera.combined);
 		  
           batch.begin();
+          
+          // Fondo negro estático (ya se limpia con glClear)
+          
+          // Parallax vertical hacia abajo (los objetos se quedan atrás mientras avanzamos)
+          // Capa 0 - Space Background (velocidad más lenta)
+          spaceBackgroundOffsetY -= 60f * delta; // Velocidad: 60 pixels por segundo
+          
+          // Resetear cuando la imagen se sale completamente de pantalla por abajo
+          if (spaceBackgroundOffsetY <= -1080) {
+              spaceBackgroundOffsetY = 0f;
+          }
+          
+          // Dibujar capa 0 - Space Background
+          // Primera instancia (principal)
+          batch.draw(fondoSpaceBackground, 0, spaceBackgroundOffsetY, 1920, 1080);
+          // Segunda instancia (para continuidad cuando la primera sale por abajo)
+          batch.draw(fondoSpaceBackground, 0, spaceBackgroundOffsetY + 1080, 1920, 1080);
+          
+          // Capa 1 - Space Stars 01 (velocidad lenta-media) con opacidad reducida al 50%
+          spaceStars01OffsetY -= 80f * delta; // Velocidad: 80 pixels por segundo
+          
+          // Resetear cuando la imagen se sale completamente de pantalla por abajo
+          if (spaceStars01OffsetY <= -1080) {
+              spaceStars01OffsetY = 0f;
+          }
+          
+          // Reducir opacidad al 50% para Space Stars 01
+          batch.setColor(1f, 1f, 1f, 0.5f); // RGBA: blanco con 50% de opacidad
+          
+          // Dibujar capa 1 - Space Stars 01 con opacidad reducida
+          // Primera instancia (principal)
+          batch.draw(fondoSpaceStars01, 0, spaceStars01OffsetY, 1920, 1080);
+          // Segunda instancia (para continuidad cuando la primera sale por abajo)
+          batch.draw(fondoSpaceStars01, 0, spaceStars01OffsetY + 1080, 1920, 1080);
+          
+          // Restaurar opacidad original
+          batch.setColor(1f, 1f, 1f, 1f); // RGBA: blanco con 100% de opacidad
+          
+          // Capa 1.1 - Space Dust (velocidad intermedia entre Stars 01 y Nebulose)
+          spaceDustOffsetY -= 90f * delta; // Velocidad: 90 pixels por segundo
+          
+          // Resetear cuando la imagen se sale completamente de pantalla por abajo
+          if (spaceDustOffsetY <= -1080) {
+              spaceDustOffsetY = 0f;
+          }
+          
+          // Dibujar capa 1.1 - Space Dust
+          // Primera instancia (principal)
+          batch.draw(fondoSpaceDust, 0, spaceDustOffsetY, 1920, 1080);
+          // Segunda instancia (para continuidad cuando la primera sale por abajo)
+          batch.draw(fondoSpaceDust, 0, spaceDustOffsetY + 1080, 1920, 1080);
+          
+          // Capa 2 - Space Nebulose (velocidad media)
+          nebuloseOffsetY -= 100f * delta; // Velocidad: 100 pixels por segundo
+          
+          // Resetear cuando la imagen se sale completamente de pantalla por abajo
+          if (nebuloseOffsetY <= -1080) {
+              nebuloseOffsetY = 0f;
+          }
+          
+          // Dibujar capa 2 - Space Nebulose
+          // Primera instancia (principal)
+          batch.draw(fondoNebulose, 0, nebuloseOffsetY, 1920, 1080);
+          // Segunda instancia (para continuidad cuando la primera sale por abajo)
+          batch.draw(fondoNebulose, 0, nebuloseOffsetY + 1080, 1920, 1080);
+          
+          // Capa 3 - Space Stars 03 (velocidad más rápida, estrellas más próximas)
+          spaceStars03OffsetY -= 120f * delta; // Velocidad: 120 pixels por segundo
+          
+          // Resetear cuando la imagen se sale completamente de pantalla por abajo
+          if (spaceStars03OffsetY <= -1080) {
+              spaceStars03OffsetY = 0f;
+          }
+          
+          // Dibujar capa 3 - Space Stars 03
+          // Primera instancia (principal)
+          batch.draw(fondoSpaceStars03, 0, spaceStars03OffsetY, 1920, 1080);
+          // Segunda instancia (para continuidad cuando la primera sale por abajo)
+          batch.draw(fondoSpaceStars03, 0, spaceStars03OffsetY + 1080, 1920, 1080);
+          
 		  dibujaEncabezado();
 	      if (!nave.estaHerido()) {
 		      // colisiones entre balas y asteroides y su destruccion  
@@ -213,9 +317,24 @@ public class PantallaJuego implements Screen {
 
 	@Override
 	public void dispose() {
-		// TODO Auto-generated method stub
+		// Limpiar recursos
 		this.explosionSound.dispose();
 		this.gameMusic.dispose();
+		if (fondoSpaceBackground != null) {
+			fondoSpaceBackground.dispose();
+		}
+		if (fondoSpaceStars01 != null) {
+			fondoSpaceStars01.dispose();
+		}
+		if (fondoSpaceDust != null) {
+			fondoSpaceDust.dispose();
+		}
+		if (fondoNebulose != null) {
+			fondoNebulose.dispose();
+		}
+		if (fondoSpaceStars03 != null) {
+			fondoSpaceStars03.dispose();
+		}
 	}
    
 }
