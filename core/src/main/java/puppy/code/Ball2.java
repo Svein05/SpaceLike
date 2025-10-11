@@ -1,6 +1,5 @@
 package puppy.code;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -20,12 +19,12 @@ public class Ball2 {
  	
         //validar que borde de esfera no quede fuera
     	if (x-size < 0) this.x = x+size;
-    	if (x+size > Gdx.graphics.getWidth())this.x = x-size;
+    	if (x+size > 1920)this.x = x-size;
          
         this.y = y;
         //validar que borde de esfera no quede fuera
     	if (y-size < 0) this.y = y+size;
-    	if (y+size > Gdx.graphics.getHeight())this.y = y-size;
+    	if (y+size > 1080)this.y = y-size;
     	
         spr.setPosition(x, y);
         this.setXSpeed(xSpeed);
@@ -35,9 +34,9 @@ public class Ball2 {
         x += getXSpeed();
         y += getySpeed();
 
-        if (x+getXSpeed() < 0 || x+getXSpeed()+spr.getWidth() > Gdx.graphics.getWidth())
+        if (x+getXSpeed() < 0 || x+getXSpeed()+spr.getWidth() > 1920)
         	setXSpeed(getXSpeed() * -1);
-        if (y+getySpeed() < 0 || y+getySpeed()+spr.getHeight() > Gdx.graphics.getHeight())
+        if (y+getySpeed() < 0 || y+getySpeed()+spr.getHeight() > 1080)
         	setySpeed(getySpeed() * -1);
         spr.setPosition(x, y);
     }
