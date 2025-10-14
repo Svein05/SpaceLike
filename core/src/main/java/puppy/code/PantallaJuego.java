@@ -720,6 +720,11 @@ public class PantallaJuego implements Screen {
 				}
 			}
 		}
+		
+		// Limpiar texturas de la nave
+		if (nave != null) {
+			nave.dispose();
+		}
 	}
    
 }
