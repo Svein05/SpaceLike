@@ -67,6 +67,9 @@ public class Nave4 {
     	this.soundBala = soundBala;
     	this.txBala = txBala;
     	
+    	// Configurar volúmenes de los sonidos (reducidos a la mitad)
+    	// Nota: setVolume se aplicará cuando se llame play() con el ID del sonido
+    	
     	// Cargar todas las texturas de la nave (del estado más dañado al más saludable)
     	shipTextures = new Texture[4];
     	shipTextures[0] = new Texture("Game/Nave/Main Ship/Main Ship - Bases/PNGs/Main Ship - Base - Very damaged.png");
@@ -178,7 +181,7 @@ public class Nave4 {
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {         
           Bullet bala = new Bullet(spr.getX()+spr.getWidth()/2-5,spr.getY()+ spr.getHeight()-5,0,3,txBala);
 	      juego.agregarBala(bala);
-	      soundBala.play();
+	      soundBala.play(0.25f);
         }
         
         // Cerrar juego con ESC
@@ -234,7 +237,7 @@ public class Nave4 {
   		    velocidadX = 0f;
   		    velocidadY = 0f;
   		    
-  		    sonidoHerido.play();
+  		    sonidoHerido.play(0.25f);
             if (healthSystem.isDead()) 
           	    destruida = true; 
             return true;

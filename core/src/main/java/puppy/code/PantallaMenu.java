@@ -2,6 +2,8 @@ package puppy.code;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
@@ -22,6 +24,21 @@ public class PantallaMenu implements Screen {
 	
 	// Área del botón Start Game que ya está en la imagen
 	private Rectangle startButtonArea;
+	
+	// Música del menú
+	private Music menuMusic;
+	
+	// Efectos de sonido
+	private Sound selectSound;
+	private Sound startGameSound;
+	
+	// Variables para el fade out
+	private boolean fadingOut = false;
+	private float fadeTimer = 0f;
+	private final float FADE_DURATION = 1.0f; // 1 segundo de fade
+	
+	// Control de hover
+	private boolean isHovering = false;
 
 	public PantallaMenu(SpaceNavigation game) {
 		this.game = game;
@@ -33,13 +50,23 @@ public class PantallaMenu implements Screen {
 		// Cargar imagen de portada
 		portadaTexture = new Texture(Gdx.files.internal("UI/Portada/Gemini_Generated_Image_yonktcyonktcyonk (2).png"));
 		
-		// Definir área grande para el botón START GAME - cubre toda la parte inferior
-		// Área súper amplia para que funcione sin importar dónde esté exactamente
-		float buttonWidth = 600f;  // Área bien amplia
-		float buttonHeight = 200f; // Área bien alta
-		float buttonX = (1920f - buttonWidth) / 2f; // Centrado horizontalmente
-		float buttonY = 50f; // Desde muy abajo hasta más arriba
+		// Área EXACTA del botón "Start Game" basada en el rectángulo rojo de la imagen
+		// El botón está centrado horizontalmente pero MUCHO más abajo del centro vertical
+		float buttonWidth = 320f;  // Ancho del rectángulo rojo que marcaste
+		float buttonHeight = 70f;  // Alto del rectángulo rojo que marcaste  
+		float buttonX = (1920f - buttonWidth) / 2f; // Centrado horizontalmente (800-1120)
+		float buttonY = 250f; // Posición vertical MUCHO más abajo
 		startButtonArea = new Rectangle(buttonX, buttonY, buttonWidth, buttonHeight);
+		
+		// Cargar y configurar música del menú - Over Now
+		menuMusic = Gdx.audio.newMusic(Gdx.files.internal("Game/VFX/Music/Over Now.mp3"));
+		menuMusic.setLooping(true);
+		menuMusic.setVolume(0.25f); // Mismo volumen que otros elementos
+		menuMusic.play();
+		
+		// Cargar efectos de sonido
+		selectSound = Gdx.audio.newSound(Gdx.files.internal("Game/VFX/Effects/select.mp3"));
+		startGameSound = Gdx.audio.newSound(Gdx.files.internal("Game/VFX/Effects/StartGame.mp3"));
 	}
 
 	@Override
@@ -57,19 +84,48 @@ public class PantallaMenu implements Screen {
 		
 		game.getBatch().end();
 
-		// Detectar clic y mostrar coordenadas en consola (sin texto en pantalla)
-		if (Gdx.input.justTouched()) {
+		// Sistema de fade out
+		if (fadingOut) {
+			fadeTimer += delta;
+			float fadeProgress = fadeTimer / FADE_DURATION;
+			
+			// Reducir volumen gradualmente
+			float newVolume = 0.25f * (1.0f - fadeProgress);
+			menuMusic.setVolume(Math.max(0f, newVolume));
+			
+			// Cuando el fade termine, cambiar de pantalla
+			if (fadeTimer >= FADE_DURATION) {
+				menuMusic.stop();
+				Screen ss = new PantallaJuego(game,1,3,0,1,1,10);
+				ss.resize(1920, 1080);
+				game.setScreen(ss);
+				dispose();
+			}
+		} else {
+			// Obtener posición del mouse de forma inmediata
 			Vector3 mousePos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
 			camera.unproject(mousePos);
 			
-			// Mostrar en consola las coordenadas exactas donde hiciste clic
-			System.out.println("COORDENADAS DEL CLIC: X=" + (int)mousePos.x + " Y=" + (int)mousePos.y);
+			// Detectar hover sobre el área del botón con detección inmediata
+			boolean currentlyHovering = startButtonArea.contains(mousePos.x, mousePos.y);
 			
-			// Por ahora, cualquier clic inicia el juego (temporal)
-			Screen ss = new PantallaJuego(game,1,3,0,1,1,10);
-			ss.resize(1920, 1080);
-			game.setScreen(ss);
-			dispose();
+			// Si acabamos de entrar al área del botón (hover), reproducir sonido select
+			if (currentlyHovering && !isHovering) {
+				selectSound.play(0.3f);
+			}
+			
+			// Actualizar estado de hover inmediatamente
+			isHovering = currentlyHovering;
+			
+			// Detectar clic SOLO si está dentro del área del botón
+			if (Gdx.input.justTouched() && startButtonArea.contains(mousePos.x, mousePos.y)) {
+				// Reproducir sonido de inicio antes del fade
+				startGameSound.play(0.25f);
+				
+				// Iniciar el fade out
+				fadingOut = true;
+				fadeTimer = 0f;
+			}
 		}
 	}
 	
@@ -108,6 +164,16 @@ public class PantallaMenu implements Screen {
 		// Limpiar recursos
 		if (portadaTexture != null) {
 			portadaTexture.dispose();
+		}
+		if (menuMusic != null) {
+			menuMusic.stop();
+			menuMusic.dispose();
+		}
+		if (selectSound != null) {
+			selectSound.dispose();
+		}
+		if (startGameSound != null) {
+			startGameSound.dispose();
 		}
 	}
    

@@ -23,6 +23,13 @@ public class PantallaJuego implements Screen {
 	private SpriteBatch batch;
 	private Sound explosionSound;
 	private Music gameMusic;
+	
+	// Variables para fade in de la música
+	private boolean musicFadingIn = true;
+	private float musicFadeTimer = 0f;
+	private final float MUSIC_FADE_DURATION = 2.0f; // 2 segundos de fade in
+	private final float TARGET_MUSIC_VOLUME = 0.4f; // Volumen objetivo
+	
 	private int score;
 	private int ronda;
 	private int velXAsteroides; 
@@ -214,11 +221,10 @@ public class PantallaJuego implements Screen {
 		
 		//inicializar assets; musica de fondo y efectos de sonido
 		explosionSound = Gdx.audio.newSound(Gdx.files.internal("explosion.ogg"));
-		explosionSound.setVolume(1,0.5f);
-		gameMusic = Gdx.audio.newMusic(Gdx.files.internal("piano-loops.wav")); //
+		gameMusic = Gdx.audio.newMusic(Gdx.files.internal("Game/VFX/Music/Metallica - Nothing Else Matters (instrumental version).mp3")); //
 		
 		gameMusic.setLooping(true);
-		gameMusic.setVolume(0.5f);
+		gameMusic.setVolume(0.0f); // Empezar en silencio para el fade in
 		gameMusic.play();
 		
 		// Cargar textura de asteroide una sola vez (optimización)
@@ -245,6 +251,22 @@ public class PantallaJuego implements Screen {
 	}
 	@Override
 	public void render(float delta) {
+		  // Sistema de fade in para la música
+		  if (musicFadingIn) {
+		      musicFadeTimer += delta;
+		      float fadeProgress = musicFadeTimer / MUSIC_FADE_DURATION;
+		      
+		      if (fadeProgress >= 1.0f) {
+		          // Fade in completado
+		          musicFadingIn = false;
+		          gameMusic.setVolume(TARGET_MUSIC_VOLUME);
+		      } else {
+		          // Aplicar fade in gradual
+		          float currentVolume = TARGET_MUSIC_VOLUME * fadeProgress;
+		          gameMusic.setVolume(currentVolume);
+		      }
+		  }
+		  
 		  Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		  
 		  // Actualizar viewport y cámara
@@ -567,7 +589,7 @@ public class PantallaJuego implements Screen {
 		            b.update();
 		            for (int j = 0; j < balls1.size(); j++) {    
 		              if (b.checkCollision(balls1.get(j))) {          
-		            	 explosionSound.play();
+		            	 explosionSound.play(0.05f);
 		            	 balls1.remove(j);
 		            	 balls2.remove(j);
 		            	 j--;
