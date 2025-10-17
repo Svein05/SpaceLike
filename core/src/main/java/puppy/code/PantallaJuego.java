@@ -34,6 +34,9 @@ public class PantallaJuego implements Screen {
 	private  ArrayList<Ball2> balls2 = new ArrayList<>();
 	private  ArrayList<Bullet> balas = new ArrayList<>();
 	
+	// Textura compartida para asteroides (optimización)
+	private Texture asteroidTexture;
+	
 	// Fondo parallax
 	private Texture fondoSpaceBackground; // Capa 0 - Space Background
 	private Texture fondoSpaceStars01; // Capa 1 - Space Stars 01
@@ -90,6 +93,11 @@ public class PantallaJuego implements Screen {
 	private boolean renderBelowNebulose; // Si se renderiza debajo de nebulose (true) o dust (false)
 	
 	private Random random; // Para duraciones aleatorias
+
+	// Sistema de generación gradual de asteroides
+	private int asteroidesToSpawn; // Asteroides restantes por generar
+	private float asteroidSpawnTimer; // Timer para generar asteroides
+	private float asteroidSpawnDelay; // Tiempo entre asteroides
 
 
 	public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,  
@@ -213,22 +221,17 @@ public class PantallaJuego implements Screen {
 		gameMusic.setVolume(0.5f);
 		gameMusic.play();
 		
+		// Cargar textura de asteroide una sola vez (optimización)
+		asteroidTexture = new Texture(Gdx.files.internal("aGreyMedium4.png"));
+		
 	    // cargar imagen de la nave, 64x64   
 	    nave = new Nave4(Gdx.graphics.getWidth()/2-50,30,new Texture(Gdx.files.internal("MainShip3.png")),
 	    				Gdx.audio.newSound(Gdx.files.internal("hurt.ogg")), 
 	    				new Texture(Gdx.files.internal("Rocket2.png")), 
 	    				Gdx.audio.newSound(Gdx.files.internal("pop-sound.mp3"))); 
         nave.setVidas(vidas);
-        //crear asteroides
-        Random r = new Random();
-	    for (int i = 0; i < cantAsteroides; i++) {
-	        Ball2 bb = new Ball2(r.nextInt(1920),
-	  	            50+r.nextInt(1080-50),
-	  	            20+r.nextInt(10), velXAsteroides+r.nextInt(4), velYAsteroides+r.nextInt(4), 
-	  	            new Texture(Gdx.files.internal("aGreyMedium4.png")));	   
-	  	    balls1.add(bb);
-	  	    balls2.add(bb);
-	  	}
+        //crear asteroides de forma gradual
+        setupAsteroidSpawning(cantAsteroides);
 	}
     
 	public void dibujaEncabezado() {
@@ -553,6 +556,9 @@ public class PantallaJuego implements Screen {
           // Restaurar opacidad original
           batch.setColor(1f, 1f, 1f, 1f); // RGBA: blanco con 100% de opacidad
           
+          // Actualizar generación gradual de asteroides
+          updateAsteroidSpawning(delta);
+          
 		  dibujaEncabezado();
 	      if (!nave.estaHerido()) {
 		      // colisiones entre balas y asteroides y su destruccion  
@@ -623,18 +629,70 @@ public class PantallaJuego implements Screen {
   		  }
 	      batch.end();
 	      //nivel completado
-	      if (balls1.size()==0) {
-			Screen ss = new PantallaJuego(game,ronda+1, nave.getVidas(), score, 
-					velXAsteroides+3, velYAsteroides+3, cantAsteroides+10);
-			ss.resize(1920, 1080);
-			game.setScreen(ss);
-			dispose();
+	      if (balls1.size()==0 && asteroidesToSpawn==0) {
+			// Usar el nuevo método que no recarga texturas
+			nextRound();
 		  }
 	    	 
 	}
     
     public boolean agregarBala(Bullet bb) {
     	return balas.add(bb);
+    }
+    
+    /**
+     * Configura el sistema de generación gradual de asteroides
+     */
+    private void setupAsteroidSpawning(int totalAsteroids) {
+        asteroidesToSpawn = totalAsteroids;
+        asteroidSpawnTimer = 0f;
+        asteroidSpawnDelay = 0.3f; // Generar un asteroide cada 300ms
+    }
+    
+    /**
+     * Actualiza la generación gradual de asteroides
+     */
+    private void updateAsteroidSpawning(float delta) {
+        if (asteroidesToSpawn > 0) {
+            asteroidSpawnTimer += delta;
+            if (asteroidSpawnTimer >= asteroidSpawnDelay) {
+                // Generar un asteroide
+                Random r = new Random();
+                Ball2 bb = new Ball2(r.nextInt(1920),
+                        50+r.nextInt(1080-50),
+                        20+r.nextInt(10), velXAsteroides+r.nextInt(4), velYAsteroides+r.nextInt(4), 
+                        asteroidTexture);	   
+                balls1.add(bb);
+                balls2.add(bb);
+                
+                asteroidesToSpawn--;
+                asteroidSpawnTimer = 0f;
+            }
+        }
+    }
+    
+    /**
+     * Reinicia la ronda sin recargar las texturas del fondo
+     */
+    private void nextRound() {
+        // Incrementar ronda y dificultad
+        ronda++;
+        velXAsteroides += 3;
+        velYAsteroides += 3;
+        cantAsteroides += 10;
+        
+        // Limpiar asteroides existentes
+        balls1.clear();
+        balls2.clear();
+        
+        // Limpiar balas
+        balas.clear();
+        
+        // Reiniciar generación de asteroides
+        setupAsteroidSpawning(cantAsteroides);
+        
+        // Mantener posición de la nave
+        // No necesitamos resetear la nave ya que mantenemos la instancia existente
     }
 	
 	@Override
@@ -724,6 +782,11 @@ public class PantallaJuego implements Screen {
 		// Limpiar texturas de la nave
 		if (nave != null) {
 			nave.dispose();
+		}
+		
+		// Limpiar textura de asteroide
+		if (asteroidTexture != null) {
+			asteroidTexture.dispose();
 		}
 	}
    
