@@ -10,12 +10,13 @@ buildscript {
   }
 }
 plugins {
-  id "io.github.fourlastor.construo" version "1.4.1"
+  // Plugin construo comentado - requiere Java 17
+  // id "io.github.fourlastor.construo" version "1.4.1"
   id "application"
 }
 
-
-import io.github.fourlastor.construo.Target
+// Plugin construo comentado - requiere Java 17
+// import io.github.fourlastor.construo.Target
 
 sourceSets.main.resources.srcDirs += [ rootProject.file('assets').path ]
 mainClassName = 'puppy.code.lwjgl3.Lwjgl3Launcher'
@@ -69,6 +70,8 @@ jar {
   }
 }
 
+// Configuracion construo comentada - requiere Java 17
+/*
 construo {
     // name of the executable
     name.set(appName)
@@ -104,6 +107,7 @@ construo {
       }
     }
 }
+*/
 
 // Equivalent to the jar task; here for compatibility with gdx-setup.
 tasks.register('dist') {

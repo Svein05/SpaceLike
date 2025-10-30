@@ -1,5 +1,6 @@
-package puppy.code;
+package puppy.code.screens;
 
+import puppy.code.SpaceNavigation;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -8,18 +9,17 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-
-public class PantallaMenu implements Screen {
+public class PantallaGameOver implements Screen {
 
 	private SpaceNavigation game;
 	private OrthographicCamera camera;
 	private Viewport viewport;
 
-	public PantallaMenu(SpaceNavigation game) {
+	public PantallaGameOver(SpaceNavigation game) {
 		this.game = game;
         
 		camera = new OrthographicCamera();
-		camera.setToOrtho(false, 1920, 1080); // Consistente con PantallaJuego
+		camera.setToOrtho(false, 1920, 1080);
 		viewport = new FitViewport(1920, 1080, camera);
 	}
 
@@ -32,8 +32,8 @@ public class PantallaMenu implements Screen {
 		game.getBatch().setProjectionMatrix(camera.combined);
 
 		game.getBatch().begin();
-		game.getFont().draw(game.getBatch(), "Bienvenido a Space Navigation !", 1920/2-300, 1080/2+100);
-		game.getFont().draw(game.getBatch(), "Pincha en cualquier lado o presiona cualquier tecla para comenzar ...", 1920/2-400, 1080/2);
+		game.getFont().draw(game.getBatch(), "Game Over !!! ", 1920/2-200, 1080/2+100);
+		game.getFont().draw(game.getBatch(), "Pincha en cualquier lado para reiniciar ...", 1920/2-300, 1080/2);
 	
 		game.getBatch().end();
 
@@ -44,11 +44,9 @@ public class PantallaMenu implements Screen {
 			dispose();
 		}
 	}
-	
-	
+ 
 	@Override
 	public void show() {
-		// TODO Auto-generated method stub
 		
 	}
 
@@ -59,26 +57,21 @@ public class PantallaMenu implements Screen {
 
 	@Override
 	public void pause() {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void resume() {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void hide() {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void dispose() {
-		// TODO Auto-generated method stub
 		
 	}
-   
 }

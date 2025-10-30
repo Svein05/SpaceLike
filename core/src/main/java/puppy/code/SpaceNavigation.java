@@ -4,24 +4,30 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-
-
-
+import puppy.code.screens.PantallaMenu;
+import puppy.code.managers.ResourceManager;
+import puppy.code.managers.GameStateManager;
 
 public class SpaceNavigation extends Game {
-	private String nombreJuego = "Space Navigation";
-	private SpriteBatch batch;
-	private BitmapFont font;
-	private int highScore;	
+    private SpriteBatch batch;
+    private BitmapFont font;
+    private ResourceManager resourceManager;
+    private GameStateManager gameStateManager;
 
-	public void create() {
-		highScore = 0;
-		batch = new SpriteBatch();
-		font = new BitmapFont(); // usa Arial font x defecto
-		font.getData().setScale(2f);
-		Screen ss = new PantallaMenu(this);
-		this.setScreen(ss);
-	}
+    public void create() {
+        // Inicializar managers
+        resourceManager = ResourceManager.getInstance();
+        gameStateManager = GameStateManager.getInstance();
+        
+        batch = new SpriteBatch();
+        font = resourceManager.getDefaultFont();
+        
+        // Precargar recursos comunes
+        resourceManager.preloadCommonResources();
+        
+        Screen ss = new PantallaMenu(this);
+        this.setScreen(ss);
+    }
 
 	public void render() {
 		super.render(); // important!
@@ -29,7 +35,7 @@ public class SpaceNavigation extends Game {
 
 	public void dispose() {
 		batch.dispose();
-		font.dispose();
+		resourceManager.dispose();
 	}
 
 	public SpriteBatch getBatch() {
@@ -41,11 +47,15 @@ public class SpaceNavigation extends Game {
 	}
 
 	public int getHighScore() {
-		return highScore;
+		return gameStateManager.getHighScore();
 	}
 
 	public void setHighScore(int highScore) {
-		this.highScore = highScore;
+		gameStateManager.setHighScore(highScore);
+	}
+	
+	public ResourceManager getResourceManager() {
+		return resourceManager;
 	}
 	
 	
