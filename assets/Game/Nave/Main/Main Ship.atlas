@@ -1,0 +1,11 @@
+Main Ship.png
+size:256,64
+repeat:none
+Main Ship - Base - Damaged
+bounds:152,2,48,48
+Main Ship - Base - Full health
+bounds:102,2,48,48
+Main Ship - Base - Slight damage
+bounds:2,2,48,48
+Main Ship - Base - Very damaged
+bounds:52,2,48,48

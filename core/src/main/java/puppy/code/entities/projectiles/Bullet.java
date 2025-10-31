@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
-import puppy.code.entities.enemies.Ball2;
+import puppy.code.entities.enemies.MeteoriteEnemy;
 
 public class Bullet extends Projectile {
     private Sprite spr;
@@ -47,7 +47,7 @@ public class Bullet extends Projectile {
         return spr.getBoundingRectangle();
     }
     
-    public boolean checkCollision(Ball2 b2) {
+    public boolean checkCollision(MeteoriteEnemy b2) {
         if (spr.getBoundingRectangle().overlaps(b2.getBounds())) {
             this.destroyed = true;
             return true;

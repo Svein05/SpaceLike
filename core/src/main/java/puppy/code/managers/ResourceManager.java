@@ -80,11 +80,8 @@ public class ResourceManager {
         getTexture("Rocket2.png");
         getTexture("aGreyMedium4.png");
         
-        // Texturas de la nave con daño
-        getTexture("Game/Nave/Main Ship/Main Ship - Bases/PNGs/Main Ship - Base - Very damaged.png");
-        getTexture("Game/Nave/Main Ship/Main Ship - Bases/PNGs/Main Ship - Base - Damaged.png");
-        getTexture("Game/Nave/Main Ship/Main Ship - Bases/PNGs/Main Ship - Base - Slight damage.png");
-        getTexture("Game/Nave/Main Ship/Main Ship - Bases/PNGs/Main Ship - Base - Full health.png");
+        // NOTA: Las texturas de la nave ahora se cargan directamente en Nave.java usando atlas
+        // Eliminadas las referencias obsoletas a Main Ship - Bases/PNGs/
         
         // Sonidos
         getSound("hurt.ogg");

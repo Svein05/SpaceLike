@@ -1,0 +1,9 @@
+PropulsionIDLE.png
+size:256,64
+repeat:none
+Ship Idle 01
+bounds:2,2,48,48
+Ship Idle 02
+bounds:102,2,48,48
+Ship Idle 03
+bounds:52,2,48,48

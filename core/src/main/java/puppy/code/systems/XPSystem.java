@@ -24,7 +24,6 @@ public class XPSystem {
     
     public void addXP(int xp) {
         currentXP += xp;
-        checkLevelUp();
     }
     
     private void checkLevelUp() {

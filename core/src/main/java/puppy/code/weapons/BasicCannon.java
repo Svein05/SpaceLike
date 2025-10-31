@@ -18,7 +18,8 @@ public class BasicCannon implements Weapon {
     @Override
     public boolean fire(float x, float y, ProjectileManager projectileManager) {
         if (canFire()) {
-            projectileManager.createBullet(x, y, 0, 300); // Velocidad más lenta y hacia arriba
+            // Usar el nuevo sistema de proyectiles tipados
+            projectileManager.createProjectile(puppy.code.entities.projectiles.ProjectileType.BULLET, x, y, 0, 300);
             lastFireTime = 0; // Resetear timer
             return true; // Disparó exitosamente
         }

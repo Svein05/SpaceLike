@@ -1,8 +1,5 @@
 package puppy.code.screens;
 
-import java.util.ArrayList;
-import java.util.Random;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
@@ -16,12 +13,12 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 import puppy.code.SpaceNavigation;
 import puppy.code.graphics.ParallaxBackground;
-import puppy.code.entities.Nave4;
-import puppy.code.entities.enemies.Ball2;
+import puppy.code.entities.Nave;
 import puppy.code.systems.XPSystem;
 import puppy.code.systems.CollisionSystem;
 import puppy.code.managers.ProjectileManager;
 import puppy.code.managers.GameStateManager;
+import puppy.code.managers.EnemyManager;
 
 public class PantallaJuego implements Screen {
 
@@ -36,12 +33,14 @@ public class PantallaJuego implements Screen {
     private int velYAsteroides; 
     private int cantAsteroides;
     
-    private Nave4 nave;
-    private ArrayList<Ball2> balls1 = new ArrayList<>();
-    private ArrayList<Ball2> balls2 = new ArrayList<>();
+    private Nave nave;
+    // Legacy asteroid lists removed - using EnemyManager instead
     
     // Sistema de fondo parallax encapsulado
     private ParallaxBackground parallaxBackground;
+    
+    // Flag para controlar si se debe hacer dispose del parallax
+    private boolean shouldDisposeParallax = true;
     
     // Sistema de XP y niveles
     private XPSystem xpSystem;
@@ -50,14 +49,22 @@ public class PantallaJuego implements Screen {
     private ProjectileManager projectileManager;
     private GameStateManager gameState;
     private CollisionSystem collisionSystem;
+    private EnemyManager enemyManager;
 
     public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,  
             int velXAsteroides, int velYAsteroides, int cantAsteroides) {
-        this(game, ronda, vidas, score, velXAsteroides, velYAsteroides, cantAsteroides, null);
+        this(game, ronda, vidas, score, velXAsteroides, velYAsteroides, cantAsteroides, null, null, -1, -1);
     }
     
     public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,  
             int velXAsteroides, int velYAsteroides, int cantAsteroides, XPSystem xpSystem) {
+        this(game, ronda, vidas, score, velXAsteroides, velYAsteroides, cantAsteroides, xpSystem, null, -1, -1);
+    }
+    
+    // Constructor completo con parallax opcional y posición de nave
+    public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,  
+            int velXAsteroides, int velYAsteroides, int cantAsteroides, XPSystem xpSystem, ParallaxBackground existingParallax,
+            float naveX, float naveY) {
         this.game = game;
         this.ronda = ronda;
         this.velXAsteroides = velXAsteroides;
@@ -70,11 +77,19 @@ public class PantallaJuego implements Screen {
         
         viewport = new FitViewport(1920, 1080, camera);
         
-        parallaxBackground = new ParallaxBackground();
+        // Usar parallax existente o crear uno nuevo
+        if (existingParallax != null) {
+            this.parallaxBackground = existingParallax;
+            this.shouldDisposeParallax = false;
+        } else {
+            this.parallaxBackground = new ParallaxBackground();
+            this.shouldDisposeParallax = true;
+        }
         
         // Inicializar managers
         projectileManager = new ProjectileManager();
         gameState = GameStateManager.getInstance();
+        enemyManager = new EnemyManager();
         
         // Configurar estado actual en GameStateManager
         gameState.setScore(score);
@@ -96,22 +111,16 @@ public class PantallaJuego implements Screen {
         gameMusic.setLooping(true);
         gameMusic.setVolume(0.5f);
         gameMusic.play();
+        // Inicializar nave en posición específica o posición inicial
+        int inicialX = (naveX >= 0) ? (int)naveX : Gdx.graphics.getWidth() / 2 - 50;
+        int inicialY = (naveY >= 0) ? (int)naveY : 30;
         
-        nave = new Nave4(Gdx.graphics.getWidth() / 2 - 50, 30, new Texture(Gdx.files.internal("MainShip3.png")),
-                        Gdx.audio.newSound(Gdx.files.internal("hurt.ogg")), 
-                        new Texture(Gdx.files.internal("Rocket2.png")), 
-                        Gdx.audio.newSound(Gdx.files.internal("pop-sound.mp3"))); 
+        nave = new Nave(inicialX, inicialY, 
+                        new Texture(Gdx.files.internal("MainShip3.png")),
+                        Gdx.audio.newSound(Gdx.files.internal("hurt.ogg"))); 
         nave.setVidas(vidas);
         
-        Random r = new Random();
-        for (int i = 0; i < cantAsteroides; i++) {
-            Ball2 bb = new Ball2(r.nextInt(1920),
-                      50 + r.nextInt(1080 - 50),
-                      20 + r.nextInt(10), velXAsteroides + r.nextInt(4), velYAsteroides + r.nextInt(4), 
-                      new Texture(Gdx.files.internal("aGreyMedium4.png")));       
-            balls1.add(bb);
-            balls2.add(bb);
-        }
+        enemyManager.startWave(ronda);
     }
     
     public void dibujaEncabezado() {
@@ -150,53 +159,35 @@ public class PantallaJuego implements Screen {
         // Actualizar ProjectileManager
         projectileManager.update(delta);
         
+        // Actualizar EnemyManager
+        enemyManager.update(delta);
+        
         if (!nave.estaHerido()) {
-            // Usar CollisionSystem para colisiones balas-enemigos
-            collisionSystem.checkBulletCollisions(
-                projectileManager.getActiveProjectiles(), 
-                balls1,
-                balls2,
+            // Colisiones balas-enemigos usando EnemyManager
+            collisionSystem.checkProjectileEnemyCollisions(
+                projectileManager.getActiveProjectiles(),
+                enemyManager.getActiveEnemies(),
                 projectileManager
             );
-            
-            // Usar CollisionSystem para colisiones nave-enemigos  
-            collisionSystem.checkShipCollisions(nave, balls1);
-            
-            // Actualizar movimiento de asteroides
-            for (Ball2 ball : balls1) {
-                ball.update(delta);
-            }
-            
-            // Colisiones entre asteroides
-            for (int i = 0; i < balls1.size(); i++) {
-                Ball2 ball1 = balls1.get(i);   
-                for (int j = 0; j < balls2.size(); j++) {
-                    Ball2 ball2 = balls2.get(j); 
-                    if (i < j) {
-                        ball1.checkCollision(ball2);
-                    }
-                }
-            } 
+
+            // Colisiones nave-enemigos usando EnemyManager
+            collisionSystem.checkShipEnemyCollisions(nave, enemyManager.getActiveEnemies());
         }
         
         // Dibujar proyectiles usando ProjectileManager
         projectileManager.render(batch);
         
+        // Dibujar enemigos usando EnemyManager
+        enemyManager.render(batch);
+        
         nave.draw(batch);
         nave.renderHealthHearts(batch);
         
-        // Dibujar asteroides y manejar colision con nave
-        for (int i = 0; i < balls1.size(); i++) {
-            Ball2 b = balls1.get(i);
-            b.draw(batch);
-            
-            if (nave.checkCollision(b)) {
-                balls1.remove(i);
-                balls2.remove(i);
-                i--;
-            }      
-        }
+        // Enemigos ya son dibujados por EnemyManager
         
+        batch.end();
+        
+        // PRIORIDAD 1: Game Over - verificar ANTES que level completado
         if (nave.estaDestruido()) {
             int currentScore = gameState.getScore();
             if (currentScore > game.getHighScore())
@@ -205,19 +196,31 @@ public class PantallaJuego implements Screen {
             ss.resize(1920, 1080);
             game.setScreen(ss);
             dispose();
+            return; // Salir inmediatamente para evitar otras verificaciones
         }
         
-        batch.end();
-        
-        // Nivel completado
-        if (balls1.size() == 0) {
-            System.out.println("¡Nivel completado! Avanzando a ronda " + (ronda + 1));
+        // PRIORIDAD 2: Nivel completado - solo si no hay game over
+        if (enemyManager.isWaveComplete()) {
             int currentScore = gameState.getScore();
+            // Otorgar XP al completar ronda
+            if (xpSystem != null) {
+                int xpReward = 50 * ronda; // XP basado en ronda completada
+                xpSystem.addXP(xpReward);
+            }
+            
+            // Obtener posición actual de la nave para mantenerla
+            float currentNaveX = nave.getX();
+            float currentNaveY = nave.getY();
+            
+            // Pasar el parallax existente y la posición de la nave para mantener continuidad visual
+            shouldDisposeParallax = false; // No dispose del parallax al avanzar ronda
             Screen ss = new PantallaJuego(game, ronda + 1, nave.getVidas(), currentScore, 
-                    velXAsteroides + 3, velYAsteroides + 3, cantAsteroides + 10, xpSystem);
+                    velXAsteroides + 3, velYAsteroides + 3, cantAsteroides + 10, xpSystem, parallaxBackground,
+                    currentNaveX, currentNaveY);
             ss.resize(1920, 1080);
             game.setScreen(ss);
-            dispose();
+            // Hacer dispose manual sin incluir parallax
+            gameMusic.dispose();
         }
     }
     
@@ -251,12 +254,16 @@ public class PantallaJuego implements Screen {
         this.explosionSound.dispose();
         this.gameMusic.dispose();
         
-        if (parallaxBackground != null) {
+        if (parallaxBackground != null && shouldDisposeParallax) {
             parallaxBackground.dispose();
         }
         
         if (projectileManager != null) {
             projectileManager.clear();
+        }
+        
+        if (enemyManager != null) {
+            enemyManager.clearAllEnemies();
         }
         
         if (nave != null) {

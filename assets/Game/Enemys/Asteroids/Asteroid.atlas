@@ -1,0 +1,17 @@
+Asteroid.png
+size:512,128
+repeat:none
+Asteroid - Exploted 1
+bounds:186,20,78,75
+Asteroid - Exploted 2
+bounds:95,9,89,86
+Asteroid - Exploted Final
+bounds:2,2,91,93
+Asteroid - Full Damage (Exploted)
+bounds:266,35,65,60
+Asteroid - Low Damage
+bounds:381,62,38,33
+Asteroid - Mid Damage
+bounds:333,56,46,39
+Asteroid - No Damage
+bounds:421,62,38,33

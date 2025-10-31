@@ -60,4 +60,9 @@ public class BossEnemy extends Enemy {
     public int getXPValue() {
         return 100; // Los boss dan 100 XP
     }
+
+    @Override
+    public String getDestructionSound() {
+        return "hurt.ogg"; // Sonido mas intenso para boss
+    }
 }
