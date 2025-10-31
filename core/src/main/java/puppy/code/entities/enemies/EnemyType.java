@@ -4,7 +4,6 @@ public enum EnemyType {
     METEORITE("aGreyMedium4.png", 20, 1, 10, 5, "explosion.ogg"),
     BOSS("boss.png", 128, 20, 500, 100, "hurt.ogg"),
     SPECIAL("special.png", 64, 3, 50, 15, "explosion.ogg");
-    // TODO: Añadir mas tipos cuando tengas assets
     
     private final String texturePath;
     private final float size;

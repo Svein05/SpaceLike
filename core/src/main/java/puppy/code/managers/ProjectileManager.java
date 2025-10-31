@@ -24,36 +24,30 @@ public class ProjectileManager {
         factory = new ProjectileFactory();
         resourceManager = ResourceManager.getInstance();
         
-        // Inicializar pools para cada tipo de proyectil
         for (ProjectileType type : ProjectileType.values()) {
             pools.put(type, new ArrayList<>());
-            // Pre-crear algunos proyectiles para object pooling
             for (int i = 0; i < POOL_SIZE_PER_TYPE; i++) {
                 Projectile projectile = factory.createProjectile(type, 0, 0, 0, 0);
-                projectile.destroy(); // Marcarlo como destruido para que esté listo para reutilizar
+                projectile.destroy();
                 pools.get(type).add(projectile);
             }
         }
     }
     
-    // Método genérico para crear cualquier tipo de proyectil
     public void createProjectile(ProjectileType type, float x, float y, float velocityX, float velocityY) {
         Projectile projectile = getPooledProjectile(type);
         if (projectile != null) {
             projectile.reset(x, y, velocityX, velocityY);
             activeProjectiles.add(projectile);
             
-            // Reproducir sonido específico del tipo de proyectil
             resourceManager.getSound(type.getSoundPath()).play();
         }
     }
     
-    // Método de conveniencia para crear proyectiles con velocidad por defecto
     public void createProjectile(ProjectileType type, float x, float y) {
         createProjectile(type, x, y, 0, type.getDefaultSpeed());
     }
     
-    // Método legacy para mantener compatibilidad con BasicCannon
     public void createBullet(float x, float y, float velocityX, float velocityY) {
         createProjectile(ProjectileType.BULLET, x, y, velocityX, velocityY);
     }
@@ -68,25 +62,23 @@ public class ProjectileManager {
             }
         }
         
-        // Si no hay proyectiles disponibles en el pool, crear uno nuevo
         return factory.createProjectile(type, 0, 0, 0, 0);
     }
     
     private void returnToPool(Projectile projectile, ProjectileType type) {
         ArrayList<Projectile> pool = pools.get(type);
         if (pool.size() < POOL_SIZE_PER_TYPE) {
-            projectile.destroy(); // Marcarlo como destruido
+            projectile.destroy();
             pool.add(projectile);
         }
     }
     
-    // Determinar el tipo de proyectil basado en su clase
     private ProjectileType getProjectileType(Projectile projectile) {
         String className = projectile.getClass().getSimpleName().toUpperCase();
         try {
             return ProjectileType.valueOf(className);
         } catch (IllegalArgumentException e) {
-            return ProjectileType.BULLET; // Default fallback
+            return ProjectileType.BULLET;
         }
     }
     
@@ -96,7 +88,6 @@ public class ProjectileManager {
             Projectile projectile = iterator.next();
             projectile.update(delta);
             
-            // Remover proyectiles fuera de pantalla
             if (isOutOfBounds(projectile)) {
                 iterator.remove();
                 returnToPool(projectile, getProjectileType(projectile));

@@ -24,7 +24,6 @@ public class BossEnemy extends Enemy {
         
         attackTimer += delta;
         if (attackTimer >= attackCooldown) {
-            // Aqui se implementaria el ataque del boss
             attackTimer = 0;
         }
         
@@ -58,11 +57,11 @@ public class BossEnemy extends Enemy {
 
     @Override
     public int getXPValue() {
-        return 100; // Los boss dan 100 XP
+        return 100;
     }
 
     @Override
     public String getDestructionSound() {
-        return "hurt.ogg"; // Sonido mas intenso para boss
+        return "hurt.ogg";
     }
 }

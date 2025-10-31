@@ -16,17 +16,11 @@ public class ProjectileFactory {
         switch (type) {
             case BULLET:
                 return new Bullet(x, y, velocityX, velocityY, texture);
-            // TODO: Añadir cuando tengas los assets:
-            // case LASER:
-            //     return new Laser(x, y, velocityX, velocityY, texture);
-            // case MISSILE:
-            //     return new Missile(x, y, velocityX, velocityY, texture);
             default:
                 return new Bullet(x, y, velocityX, velocityY, texture);
         }
     }
-    
-    // Factory method para crear proyectiles con configuracion por defecto
+
     public Projectile createProjectile(ProjectileType type, float x, float y) {
         return createProjectile(type, x, y, 0, type.getDefaultSpeed());
     }

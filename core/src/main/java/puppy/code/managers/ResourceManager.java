@@ -12,7 +12,6 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 public class ResourceManager {
     private static ResourceManager instance;
     
-    // Mapas para almacenar recursos cargados
     private Map<String, Texture> textures;
     private Map<String, Sound> sounds;
     private Map<String, Music> music;
@@ -32,7 +31,6 @@ public class ResourceManager {
         return instance;
     }
     
-    // Métodos para texturas
     public Texture getTexture(String path) {
         if (!textures.containsKey(path)) {
             textures.put(path, new Texture(Gdx.files.internal(path)));
@@ -40,7 +38,6 @@ public class ResourceManager {
         return textures.get(path);
     }
     
-    // Métodos para sonidos
     public Sound getSound(String path) {
         if (!sounds.containsKey(path)) {
             sounds.put(path, Gdx.audio.newSound(Gdx.files.internal(path)));
@@ -48,7 +45,6 @@ public class ResourceManager {
         return sounds.get(path);
     }
     
-    // Métodos para música
     public Music getMusic(String path) {
         if (!music.containsKey(path)) {
             music.put(path, Gdx.audio.newMusic(Gdx.files.internal(path)));
@@ -56,7 +52,6 @@ public class ResourceManager {
         return music.get(path);
     }
     
-    // Métodos para fuentes
     public BitmapFont getFont(String path) {
         if (!fonts.containsKey(path)) {
             fonts.put(path, new BitmapFont(Gdx.files.internal(path)));
@@ -73,29 +68,18 @@ public class ResourceManager {
         return fonts.get("default");
     }
     
-    // Precargar recursos comunes
     public void preloadCommonResources() {
-        // Texturas del juego
-        getTexture("MainShip3.png");
         getTexture("Rocket2.png");
-        getTexture("aGreyMedium4.png");
         
-        // NOTA: Las texturas de la nave ahora se cargan directamente en Nave.java usando atlas
-        // Eliminadas las referencias obsoletas a Main Ship - Bases/PNGs/
-        
-        // Sonidos
         getSound("hurt.ogg");
         getSound("pop-sound.mp3");
         getSound("explosion.ogg");
         
-        // Música
         getMusic("piano-loops.wav");
         
-        // Fuente por defecto
         getDefaultFont();
     }
     
-    // Método para liberar un recurso específico
     public void unloadTexture(String path) {
         if (textures.containsKey(path)) {
             textures.get(path).dispose();
@@ -117,7 +101,6 @@ public class ResourceManager {
         }
     }
     
-    // Liberar todos los recursos
     public void dispose() {
         for (Texture texture : textures.values()) {
             texture.dispose();
@@ -138,7 +121,6 @@ public class ResourceManager {
         fonts.clear();
     }
     
-    // Métodos de utilidad
     public boolean isTextureLoaded(String path) {
         return textures.containsKey(path);
     }

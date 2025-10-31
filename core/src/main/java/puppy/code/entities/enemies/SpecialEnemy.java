@@ -49,11 +49,11 @@ public class SpecialEnemy extends Enemy {
 
     @Override
     public int getXPValue() {
-        return 15; // Los enemigos especiales dan 15 XP
+        return 15;
     }
 
     @Override
     public String getDestructionSound() {
-        return "explosion.ogg"; // Sonido de explosion para enemigos especiales
+        return "explosion.ogg";
     }
 }

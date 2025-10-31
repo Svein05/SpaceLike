@@ -10,7 +10,7 @@ public class BasicCannon implements Weapon {
     private int damage;
     
     public BasicCannon() {
-        this.fireRate = 0.3f; // Disparos cada 0.3 segundos
+        this.fireRate = puppy.code.entities.projectiles.ProjectileType.BULLET.getFireRate();
         this.damage = 1;
         this.lastFireTime = 0;
     }
@@ -18,27 +18,25 @@ public class BasicCannon implements Weapon {
     @Override
     public boolean fire(float x, float y, ProjectileManager projectileManager) {
         if (canFire()) {
-            // Usar el nuevo sistema de proyectiles tipados
-            projectileManager.createProjectile(puppy.code.entities.projectiles.ProjectileType.BULLET, x, y, 0, 300);
-            lastFireTime = 0; // Resetear timer
-            return true; // Disparó exitosamente
+            projectileManager.createProjectile(puppy.code.entities.projectiles.ProjectileType.BULLET, x, y, 0, 
+                puppy.code.entities.projectiles.ProjectileType.BULLET.getDefaultSpeed());
+            lastFireTime = 0;
+            return true;
         }
-        return false; // No pudo disparar (cooldown)
+        return false;
     }
     
     @Override
     public void update(float delta) {
-        lastFireTime += delta; // Incrementar timer con delta
+        lastFireTime += delta;
     }
     
     @Override
-    public void draw(SpriteBatch batch) {
-        // El cannon basico no tiene representacion visual propia
-    }
+    public void draw(SpriteBatch batch) {}
     
     @Override
     public boolean canFire() {
-        return lastFireTime >= fireRate; // Verificar si ha pasado suficiente tiempo
+        return lastFireTime >= fireRate;
     }
     
     @Override

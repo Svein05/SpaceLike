@@ -7,22 +7,18 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class ParallaxBackground {
-    
-    // Texturas de las capas de fondo
     private Texture fondoSpaceBackground;
     private Texture fondoSpaceStars01;
     private Texture[] fondoSpaceDustVariations;
     private Texture[] fondoNebuloseVariations;
     private Texture[] fondoSpaceStars03Variations;
-    
-    // Offsets para el movimiento parallax
+
     private float spaceBackgroundOffsetY;
     private float spaceStars01OffsetY;
     private float spaceDustOffsetY;
     private float nebuloseOffsetY;
     private float spaceStars03OffsetY;
     
-    // Sistema de transiciones dinámicas para Space Dust
     private float spaceDustCycleTimer;
     private float spaceDustCycleDuration;
     private int currentSpaceDustIndex;
@@ -31,7 +27,6 @@ public class ParallaxBackground {
     private float nextSpaceDustAlpha;
     private boolean inSpaceDustTransition;
     
-    // Sistema de transiciones dinámicas para Space Nebulose
     private float nebuloseTransitionTimer;
     private float nebuloseCycleDuration;
     private int currentNebuloseIndex;
@@ -40,7 +35,6 @@ public class ParallaxBackground {
     private float nextNebuloseAlpha;
     private boolean inNebuloseTransition;
     
-    // Sistema de transiciones dinámicas para Space Stars 03
     private float spaceStars03TransitionTimer;
     private float spaceStars03CycleDuration;
     private int currentSpaceStars03Index;
@@ -48,8 +42,7 @@ public class ParallaxBackground {
     private float spaceStars03Alpha;
     private float nextSpaceStars03Alpha;
     private boolean inSpaceStars03Transition;
-    
-    // Sistema de planetas dinámicos
+
     private Texture[] planetTextures;
     private Texture currentPlanetTexture;
     private float planetTimer;
@@ -64,14 +57,12 @@ public class ParallaxBackground {
     
     private Random random;
     
-    // Constantes de velocidad para cada capa
     private static final float SPACE_BACKGROUND_SPEED = 60f;
     private static final float SPACE_STARS_01_SPEED = 80f;
     private static final float SPACE_DUST_SPEED = 90f;
     private static final float NEBULOSE_SPEED = 100f;
     private static final float SPACE_STARS_03_SPEED = 120f;
     
-    // Constantes de opacidad
     private static final float SPACE_STARS_01_OPACITY = 0.4f;
     private static final float SPACE_DUST_OPACITY = 0.6f;
     private static final float NEBULOSE_OPACITY = 0.8f;
@@ -127,7 +118,6 @@ public class ParallaxBackground {
     }
     
     private void initializeTransitionSystems() {
-        // Sistema Space Dust (60 segundos)
         spaceDustCycleTimer = 0f;
         spaceDustCycleDuration = 60f;
         currentSpaceDustIndex = 0;
@@ -136,7 +126,6 @@ public class ParallaxBackground {
         nextSpaceDustAlpha = 0.0f;
         inSpaceDustTransition = false;
         
-        // Sistema Space Nebulose (30 segundos, desfase 10s)
         nebuloseTransitionTimer = 10f;
         nebuloseCycleDuration = 30f;
         currentNebuloseIndex = 0;
@@ -145,7 +134,6 @@ public class ParallaxBackground {
         nextNebuloseAlpha = 0.0f;
         inNebuloseTransition = false;
         
-        // Sistema Space Stars 03 (10 segundos, desfase 5s)
         spaceStars03TransitionTimer = 5f;
         spaceStars03CycleDuration = 10f;
         currentSpaceStars03Index = 0;
@@ -176,14 +164,12 @@ public class ParallaxBackground {
     }
     
     private void updateParallaxMovement(float delta) {
-        // Actualizar offsets de cada capa con diferentes velocidades
         spaceBackgroundOffsetY -= SPACE_BACKGROUND_SPEED * delta;
         spaceStars01OffsetY -= SPACE_STARS_01_SPEED * delta;
         spaceDustOffsetY -= SPACE_DUST_SPEED * delta;
         nebuloseOffsetY -= NEBULOSE_SPEED * delta;
         spaceStars03OffsetY -= SPACE_STARS_03_SPEED * delta;
         
-        // Resetear cuando las capas salen de pantalla
         if (spaceBackgroundOffsetY <= -1080) spaceBackgroundOffsetY = 0f;
         if (spaceStars01OffsetY <= -1080) spaceStars01OffsetY = 0f;
         if (spaceDustOffsetY <= -1080) spaceDustOffsetY = 0f;

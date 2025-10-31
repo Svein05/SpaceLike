@@ -11,7 +11,7 @@ public class XPSystem {
     private boolean leveledUp;
     private float levelUpMessageTimer;
     private static final float LEVEL_UP_MESSAGE_DURATION = 2.0f;
-    private GlyphLayout layout; // Para medir texto
+    private GlyphLayout layout;
     
     public XPSystem() {
         this.currentXP = 0;
@@ -24,13 +24,13 @@ public class XPSystem {
     
     public void addXP(int xp) {
         currentXP += xp;
+        checkLevelUp();
     }
     
     private void checkLevelUp() {
-        if (currentXP >= xpToNextLevel) {
+        while (currentXP >= xpToNextLevel) {
             currentLevel++;
             currentXP -= xpToNextLevel;
-            // Incrementar XP requerido para el siguiente nivel (50% mas)
             xpToNextLevel = (int)(xpToNextLevel * 1.5f);
             leveledUp = true;
             levelUpMessageTimer = LEVEL_UP_MESSAGE_DURATION;
@@ -47,24 +47,20 @@ public class XPSystem {
     }
     
     public void render(SpriteBatch batch, BitmapFont font, float screenWidth) {
-        // Mostrar nivel y XP centrado en la parte superior
         String levelText = "Nivel: " + currentLevel;
         String xpText = "XP: " + currentXP + " / " + xpToNextLevel;
         
         font.getData().setScale(1.5f);
         
-        // Calcular posicion centrada usando GlyphLayout
         layout.setText(font, levelText);
         float levelX = (screenWidth - layout.width) / 2;
         
         layout.setText(font, xpText);
         float xpX = (screenWidth - layout.width) / 2;
-        
-        // Dibujar nivel arriba del XP
+
         font.draw(batch, levelText, levelX, 1050);
         font.draw(batch, xpText, xpX, 1020);
         
-        // Mostrar mensaje de nivel subido
         if (leveledUp) {
             String levelUpText = "¡Has subido de nivel!";
             font.getData().setScale(2.0f);

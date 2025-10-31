@@ -16,8 +16,8 @@ public abstract class Enemy extends GameObject {
     
     public abstract void takeDamage(int damage);
     public abstract int getScoreValue();
-    public abstract int getXPValue(); // XP que otorga al ser derrotado
-    public abstract String getDestructionSound(); // Sonido especifico de destruccion
+    public abstract int getXPValue();
+    public abstract String getDestructionSound();
     
     public boolean isDestroyed() { return destroyed; }
     public int getHealth() { return health; }

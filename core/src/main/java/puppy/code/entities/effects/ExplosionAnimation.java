@@ -13,18 +13,15 @@ public class ExplosionAnimation {
     private float x, y;
     private float width, height;
     
-    private static final float FRAME_DURATION = 0.15f; // Duracion de cada frame
+    private static final float FRAME_DURATION = 0.15f;
     
     public ExplosionAnimation(float x, float y, float width, float height) {
         this.x = x;
         this.y = y;
-        // Hacer la explosion mas grande que el asteroide original
         this.width = width * 1.5f;
         this.height = height * 1.5f;
-        // Centrar la explosion
         this.x = x - (this.width - width) / 2;
         this.y = y - (this.height - height) / 2;
-        
         this.currentTime = 0;
         this.currentFrame = 0;
         this.finished = false;

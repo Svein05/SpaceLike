@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import puppy.code.stats.ShipStats;
 
 public class HealthSystem {
     
@@ -20,8 +21,11 @@ public class HealthSystem {
     private HeartState[] hearts;
     private int maxHearts;
     private float currentHealth;
+    private ShipStats shipStats;
     
-    public HealthSystem() {
+    public HealthSystem(ShipStats shipStats) {
+        this.shipStats = shipStats;
+        
         TextureAtlas heartAtlas = new TextureAtlas(Gdx.files.internal("UI/Heart/HeartsUwU.atlas"));
         
         heartFull = heartAtlas.findRegion("HeartFull");
@@ -36,9 +40,11 @@ public class HealthSystem {
             throw new RuntimeException("No se pudieron cargar los sprites de corazones desde el atlas.");
         }
         
-        maxHearts = 3;
+        // Usar maxHealth de shipStats
+        int maxHealthPoints = shipStats.getMaxHealth();
+        maxHearts = (maxHealthPoints + 1) / 2;
         hearts = new HeartState[maxHearts];
-        currentHealth = 6;
+        currentHealth = maxHealthPoints;
         
         for (int i = 0; i < maxHearts; i++) {
             hearts[i] = HeartState.FULL;
@@ -46,8 +52,17 @@ public class HealthSystem {
     }
     
     public void takeDamage() {
+        takeDamage(1.0f);
+    }
+    
+    public void takeDamage(float baseDamage) {
         if (currentHealth > 0) {
-            currentHealth--;
+            float actualDamage = shipStats.calculateDamageReceived(baseDamage);
+            currentHealth -= actualDamage;
+            if (currentHealth < 0) {
+                currentHealth = 0;
+            }
+            
             updateHeartStates();
         }
     }
@@ -109,7 +124,34 @@ public class HealthSystem {
     }
     
     public void fullHeal() {
-        currentHealth = maxHearts * 2;
+        currentHealth = shipStats.getMaxHealth();
+        updateHeartStates();
+    }
+    
+    public void refreshFromStats() {
+        int newMaxHealthPoints = shipStats.getMaxHealth();
+        int newMaxHearts = (newMaxHealthPoints + 1) / 2;
+        
+        if (newMaxHearts != maxHearts) {
+            maxHearts = newMaxHearts;
+            HeartState[] newHearts = new HeartState[maxHearts];
+            
+            for (int i = 0; i < Math.min(hearts.length, newHearts.length); i++) {
+                newHearts[i] = hearts[i];
+            }
+            
+            for (int i = hearts.length; i < newHearts.length; i++) {
+                newHearts[i] = HeartState.FULL;
+            }
+            
+            hearts = newHearts;
+        }
+        
+        float maxHealth = shipStats.getMaxHealth();
+        if (currentHealth > maxHealth) {
+            currentHealth = maxHealth;
+        }
+        
         updateHeartStates();
     }
 }

@@ -9,14 +9,14 @@ public class LaserWeapon implements Weapon {
     private float lastFireTime;
 
     public LaserWeapon() {
-        this.fireRate = 0.1f; // Disparo mas rapido que el canon basico
+        this.fireRate = 0.1f;
         this.lastFireTime = 0;
     }
 
     @Override
     public boolean fire(float x, float y, ProjectileManager projectileManager) {
         if (canFire()) {
-            projectileManager.createBullet(x, y, 0, 800); // Velocidad mayor que BasicCannon
+            projectileManager.createBullet(x, y, 0, 800);
             lastFireTime = 0;
             return true;
         }
@@ -34,9 +34,7 @@ public class LaserWeapon implements Weapon {
     }
 
     @Override
-    public void draw(SpriteBatch batch) {
-        // Las armas no tienen representacion visual propia
-    }
+    public void draw(SpriteBatch batch) {}
 
     @Override
     public String getName() {

@@ -18,24 +18,19 @@ import puppy.code.entities.enemies.MeteoriteEnemy;
 import puppy.code.screens.PantallaJuego;
 import puppy.code.systems.HealthSystem;
 import puppy.code.interfaces.Weapon;
+import puppy.code.interfaces.ShootingBehavior;
 import puppy.code.weapons.BasicCannon;
+import puppy.code.stats.ShipStats;
 
 public class Nave extends GameObject {
     private boolean destruida = false;
     private Sprite spr;
     private Sound sonidoHerido;
-    // Flag para dibujar hitbox en modo testing
-    public static boolean DEBUG_DRAW_HITBOX = false; // Deshabilitado temporalmente
-    // ShapeRenderer para debug (creado solo si DEBUG_DRAW_HITBOX es true)
+    public static boolean DEBUG_DRAW_HITBOX = false;
     private ShapeRenderer shapeRenderer = null;
     private boolean herido = false;
     private int tiempoHeridoMax = 50;
     private int tiempoHerido;
-    
-    // SISTEMA MULTICAPA: texturas obsoletas eliminadas
-    // Las texturas ahora se manejan a través de atlas multicapa
-    
-    // Sistema de fisica realista para la nave
     private float velocidadX = 0f;
     private float velocidadY = 0f;
     private static final float ACELERACION = 0.3f;
@@ -48,23 +43,46 @@ public class Nave extends GameObject {
     
     // Sistema de armas
     private Weapon currentWeapon;
+    private ShootingBehavior bonusShootingBehavior;
     
-    // Sistema multicapa de renderizado
-    private TextureAtlas mainShipAtlas;           // Capa Top: estados de vida
-    private TextureRegion middleBaseRegion;       // Capa Middle: base/esqueleto
-    private Animation<TextureRegion> idleAnimation;        // Capa Low: propulsión idle
-    private Animation<TextureRegion> powerAnimation;       // Capa Low: propulsión power
-    private Animation<TextureRegion> powerVerticalAnimation; // Capa Low: propulsión vertical
+    // Sistema de estadisticas de la nave
+    private ShipStats shipStats;
+    
+    // Sistema de invencibilidad
+    private boolean invincible = false;
+    
+    private TextureAtlas mainShipAtlas;
+    private TextureRegion middleBaseRegion;
+    private Animation<TextureRegion> idleAnimation;
+    private Animation<TextureRegion> powerAnimation;
+    private Animation<TextureRegion> powerVerticalAnimation;
+    
+    // Sistema de animacion de disparo
+    private TextureAtlas basicCannonAtlas;
+    private Animation<TextureRegion> basicShootingAnimation;
     
     // Control de animaciones
     private float animationTime = 0f;
     private PropulsionState currentPropulsionState = PropulsionState.IDLE;
-    private static final float MOVEMENT_THRESHOLD = 0.2f; // Umbral para detectar movimiento
+    private static final float MOVEMENT_THRESHOLD = 0.2f;
     private static final float ANIMATION_FRAME_DURATION = 0.1f;
     
-    // Tamaño objetivo para todas las capas
-    private float targetWidth = 192f;   // Escalado actual de la nave (48*4=192)
-    private float targetHeight = 192f;
+    private boolean isShooting = false;
+    private float shootingAnimationTime = 0f;
+    private float lastShotTime = 0f;
+    
+    // Parametros configurables para posiciones de disparo
+    private static final float CENTER_OFFSET_X = -5f;
+    private static final float CENTER_OFFSET_Y = -5f;
+
+    private static final float LEFT_WING_OFFSET_X = -24f;
+    private static final float LEFT_WING_OFFSET_Y = 10f;
+
+    private static final float RIGHT_WING_OFFSET_X = 15f;
+    private static final float RIGHT_WING_OFFSET_Y = 10f;
+    
+    private float targetWidth = 96f;
+    private float targetHeight = 96f;
     
     // Enum para estados de propulsión
     public enum PropulsionState {
@@ -72,22 +90,32 @@ public class Nave extends GameObject {
     }
     
     public Nave(int x, int y, Texture tx, Sound soundChoque) {
-        super(x, y, 76, 76); // Sera ajustado despues
+        super(x, y, 76, 76);
         sonidoHerido = soundChoque;
-        
-        // SISTEMA MULTICAPA: Ya no usamos texturas individuales
-        // Las texturas se cargan desde el atlas en loadMultilayerAssets()
-        
-        // Crear sprite temporal con la textura pasada (para compatibilidad)
-        // Luego será reemplazado por el sistema multicapa
         spr = new Sprite(tx);
         
         // Configurar tamaño escalado inicial 
-        float scale = 4.0f; // Escalar 4x para que sea 100% más grande (era 2x, ahora 4x)
+        float scale = 2.0f;
         float scaledWidth = tx.getWidth() * scale;
         float scaledHeight = tx.getHeight() * scale;
         
-        // Actualizar las dimensiones del GameObject base
+        initializeNave(x, y, scaledWidth, scaledHeight);
+    }
+    
+    public Nave(int x, int y, Sound soundChoque) {
+        super(x, y, 76, 76);
+        sonidoHerido = soundChoque;
+        
+        spr = new Sprite();
+        
+        // Configurar tamaño
+        float scaledWidth = 96f;
+        float scaledHeight = 96f;
+        
+        initializeNave(x, y, scaledWidth, scaledHeight);
+    }
+    
+    private void initializeNave(int x, int y, float scaledWidth, float scaledHeight) {
         this.width = scaledWidth;
         this.height = scaledHeight;
         
@@ -95,35 +123,30 @@ public class Nave extends GameObject {
         spr.setPosition(x, y);
         spr.setSize(scaledWidth, scaledHeight);
         
-        // Inicializar sistema de corazones
-        healthSystem = new HealthSystem();
+        shipStats = new ShipStats();
+        healthSystem = new HealthSystem(shipStats);
 
-        // Inicializar ShapeRenderer solo si el debug esta activo
         if (DEBUG_DRAW_HITBOX) {
             shapeRenderer = new ShapeRenderer();
         }
 
-        // Inicializar arma basica (ya no necesita textura)
         currentWeapon = new BasicCannon();
-        
-        // Cargar recursos para sistema multicapa
+
         loadMultilayerAssets();
-        
-        // Actualizar tamaño objetivo basado en el sprite escalado
         targetWidth = scaledWidth;
         targetHeight = scaledHeight;
     }
     
     private void loadMultilayerAssets() {
         try {
-            // Cargar atlas de estados de vida (Capa Top)
             mainShipAtlas = new TextureAtlas(Gdx.files.internal("Game/Nave/Main/Main Ship.atlas"));
             
-            // Cargar base/esqueleto (Capa Middle)
             Texture baseTexture = new Texture(Gdx.files.internal("Game/Nave/Main/Main Ship Base.png"));
             middleBaseRegion = new TextureRegion(baseTexture);
             
-            // Cargar y crear animaciones de propulsión (Capas Low)
+            basicCannonAtlas = new TextureAtlas(Gdx.files.internal("Game/Nave/Weapons/Ship Basic Cannon.atlas"));
+            createShootingAnimation();
+            
             createPropulsionAnimations();
         } catch (Exception e) {
             System.err.println("Error cargando assets multicapa: " + e.getMessage());
@@ -132,7 +155,6 @@ public class Nave extends GameObject {
     }
     
     private void createPropulsionAnimations() {
-        // Cargar atlas de propulsión IDLE
         TextureAtlas idleAtlas = new TextureAtlas(Gdx.files.internal("Game/Nave/Propulsion/PropulsionIDLE.atlas"));
         TextureRegion[] idleFrames = new TextureRegion[3];
         idleFrames[0] = idleAtlas.findRegion("Ship Idle 01");
@@ -141,7 +163,6 @@ public class Nave extends GameObject {
         idleAnimation = new Animation<>(ANIMATION_FRAME_DURATION, idleFrames);
         idleAnimation.setPlayMode(Animation.PlayMode.LOOP);
         
-        // Cargar atlas de propulsión POWER
         TextureAtlas powerAtlas = new TextureAtlas(Gdx.files.internal("Game/Nave/Propulsion/PropulsionPOWER.atlas"));
         TextureRegion[] powerFrames = new TextureRegion[4];
         powerFrames[0] = powerAtlas.findRegion("Ship Power 01");
@@ -151,7 +172,6 @@ public class Nave extends GameObject {
         powerAnimation = new Animation<>(ANIMATION_FRAME_DURATION, powerFrames);
         powerAnimation.setPlayMode(Animation.PlayMode.LOOP);
         
-        // Cargar atlas de propulsión POWER VERTICAL
         TextureAtlas powerVerticalAtlas = new TextureAtlas(Gdx.files.internal("Game/Nave/Propulsion/PropulsionPOWERVERTICAL.atlas"));
         TextureRegion[] powerVerticalFrames = new TextureRegion[4];
         powerVerticalFrames[0] = powerVerticalAtlas.findRegion("Ship Power Vertical 01");
@@ -162,33 +182,24 @@ public class Nave extends GameObject {
         powerVerticalAnimation.setPlayMode(Animation.PlayMode.LOOP);
     }
     
-    private void updateShipTexture() {
-        // SISTEMA MULTICAPA: La textura de vida se obtiene del atlas
-        // en tiempo de renderizado, no se cambia el sprite base
-        
-        if (mainShipAtlas == null) return; // Aún no se han cargado los assets
-        
-        // La lógica de selección de textura por vida ahora se maneja
-        // en el método getCurrentHealthRegion() que se llama durante draw()
+    private void createShootingAnimation() {
+        if (basicCannonAtlas != null) {
+            TextureRegion[] basicFrames = new TextureRegion[7];
+            basicFrames[0] = basicCannonAtlas.findRegion("Ship Autocannon lv0_01");
+            basicFrames[1] = basicCannonAtlas.findRegion("Ship Autocannon lv0_02");
+            basicFrames[2] = basicCannonAtlas.findRegion("Ship Autocannon lv0_03");
+            basicFrames[3] = basicCannonAtlas.findRegion("Ship Autocannon lv0_04");
+            basicFrames[4] = basicCannonAtlas.findRegion("Ship Autocannon lv0_05");
+            basicFrames[5] = basicCannonAtlas.findRegion("Ship Autocannon lv0_06");
+            basicFrames[6] = basicCannonAtlas.findRegion("Ship Autocannon lv0_07");
+            
+            basicShootingAnimation = new Animation<>(ANIMATION_FRAME_DURATION, basicFrames);
+            basicShootingAnimation.setPlayMode(Animation.PlayMode.LOOP);
+        }
     }
     
-    private TextureRegion getCurrentHealthRegion() {
-        if (mainShipAtlas == null) return null;
-        
-        float currentHealth = healthSystem.getCurrentHealth();
-        String regionName;
-        
-        if (currentHealth >= 5.5f) {
-            regionName = "Main Ship - Base - Full health";
-        } else if (currentHealth >= 3.5f) {
-            regionName = "Main Ship - Base - Slight damage";
-        } else if (currentHealth >= 1.5f) {
-            regionName = "Main Ship - Base - Damaged";
-        } else {
-            regionName = "Main Ship - Base - Very damaged";
-        }
-        
-        return mainShipAtlas.findRegion(regionName);
+    private void updateShipTexture() {
+        if (mainShipAtlas == null) return;
     }
 
     @Override
@@ -210,11 +221,21 @@ public class Nave extends GameObject {
             if (Gdx.input.isKeyPressed(Input.Keys.A)) aceleracionX -= ACELERACION;
             if (Gdx.input.isKeyPressed(Input.Keys.D)) aceleracionX += ACELERACION;
             
-            // Aplicar aceleracion a la velocidad
+            // Detectar disparo continuo
+            if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+                if (!isShooting) {
+                    startShooting();
+                }
+            } else {
+                // Dejar de disparar cuando se suelta SPACE
+                if (isShooting) {
+                    stopShooting();
+                }
+            }
+            
             velocidadX += aceleracionX;
             velocidadY += aceleracionY;
             
-            // Limitar velocidad maxima
             float velocidadTotal = (float) Math.sqrt(velocidadX * velocidadX + velocidadY * velocidadY);
             if (velocidadTotal > VELOCIDAD_MAXIMA) {
                 float factor = VELOCIDAD_MAXIMA / velocidadTotal;
@@ -222,19 +243,15 @@ public class Nave extends GameObject {
                 velocidadY *= factor;
             }
             
-            // Aplicar friccion espacial
             velocidadX *= FRICCION;
             velocidadY *= FRICCION;
             
-            // Parar completamente si la velocidad es muy baja
             if (Math.abs(velocidadX) < UMBRAL_PARADA) velocidadX = 0f;
             if (Math.abs(velocidadY) < UMBRAL_PARADA) velocidadY = 0f;
             
-            // Calcular nueva posicion
             float newX = x + velocidadX;
             float newY = y + velocidadY;
             
-            // Verificar limites de pantalla usando dimensiones exactas del sprite
             if (newX >= 0 && newX + spr.getWidth() <= 1920) {
                 x = newX;
                 spr.setX(x);
@@ -252,63 +269,134 @@ public class Nave extends GameObject {
             if (tiempoHerido <= 0) herido = false;
         }
         
-        // Actualizar animaciones multicapa
         updatePropulsionState();
+        updateShootingAnimation(delta);
         animationTime += delta;
     }
     
     private void updatePropulsionState() {
         PropulsionState newState;
         
-        // Determinar el estado de propulsión basado en la velocidad
         float absVelX = Math.abs(velocidadX);
         float absVelY = Math.abs(velocidadY);
         
-        // NUEVA LÓGICA: Si se mueve hacia arriba (Y negativo), mostrar IDLE como efecto de frenado
         if (velocidadY < -MOVEMENT_THRESHOLD) {
             newState = PropulsionState.IDLE;
         } else if (absVelY > MOVEMENT_THRESHOLD && absVelY > absVelX && velocidadY > 0) {
-            // Movimiento vertical dominante hacia abajo
             newState = PropulsionState.POWER_VERTICAL;
         } else if (absVelX > MOVEMENT_THRESHOLD || (absVelY > MOVEMENT_THRESHOLD && velocidadY > 0)) {
-            // Movimiento horizontal o vertical hacia abajo
             newState = PropulsionState.POWER;
         } else {
-            // Sin movimiento significativo
             newState = PropulsionState.IDLE;
         }
         
-        // Si el estado cambió, reiniciar el tiempo de animación para suavidad
         if (newState != currentPropulsionState) {
             currentPropulsionState = newState;
             animationTime = 0f;
 
         }
     }
+    
+    private void startShooting() {
+        if (!isShooting) {
+            isShooting = true;
+            shootingAnimationTime = 0f;
+        }
+    }
+    
+    private void stopShooting() {
+        isShooting = false;
+        shootingAnimationTime = 0f;
+    }
+    
+    private void updateShootingAnimation(float delta) {
+        lastShotTime += delta;
+        if (isShooting) {
+            shootingAnimationTime += delta;
+        }
+    }
+    
+    public boolean canShoot() {
+        float effectiveFireRate = shipStats.getEffectiveFireRate(puppy.code.entities.projectiles.ProjectileType.BULLET);
+        return isShooting && lastShotTime >= effectiveFireRate;
+    }
+    
+    public void resetShotCooldown() {
+        lastShotTime = 0f;
+    }
+    
+    public boolean isShooting() {
+        return isShooting;
+    }
+    
+    public float getCenterShootX() {
+        return x + targetWidth/2 + CENTER_OFFSET_X;
+    }
+    
+    public float getCenterShootY() {
+        return y + targetHeight + CENTER_OFFSET_Y;
+    }
+    
+    public float getLeftWingShootX() {
+        return x + targetWidth/2 + LEFT_WING_OFFSET_X;
+    }
+    
+    public float getLeftWingShootY() {
+        return y + targetHeight/2 + LEFT_WING_OFFSET_Y;
+    }
+    
+    public float getRightWingShootX() {
+        return x + targetWidth/2 + RIGHT_WING_OFFSET_X;
+    }
+    
+    public float getRightWingShootY() {
+        return y + targetHeight/2 + RIGHT_WING_OFFSET_Y;
+    }
+    
+    public float getX() { return x; }
+    public float getY() { return y; }
+    public float getWidth() { return targetWidth; }
+    public float getHeight() { return targetHeight; }
+    
+    public void setBonusShootingBehavior(ShootingBehavior behavior) {
+        this.bonusShootingBehavior = behavior;
+    }
+    
+    public ShootingBehavior getShootingBehavior() {
+        return bonusShootingBehavior;
+    }
+    
+    public void executeShoot(puppy.code.managers.ProjectileManager projectileManager) {
+        if (bonusShootingBehavior != null && bonusShootingBehavior.isActive()) {
+            // Usar comportamiento del bonus
+            bonusShootingBehavior.shoot(this, projectileManager);
+        } else {
+            // Usar disparo básico de la nave
+            executeBasicShoot(projectileManager);
+        }
+    }
+    
+    private void executeBasicShoot(puppy.code.managers.ProjectileManager projectileManager) {
+        float effectiveSpeed = shipStats.getEffectiveProjectileSpeed(puppy.code.entities.projectiles.ProjectileType.BULLET);
+        projectileManager.createProjectile(
+            puppy.code.entities.projectiles.ProjectileType.BULLET,
+            getCenterShootX(), 
+            getCenterShootY(), 
+            0, 
+            effectiveSpeed
+        );
+    }
 
     @Override
     public void draw(SpriteBatch batch) {
-        // Obtener la posición actual (con shake effect si está herido)
         float drawX = herido ? spr.getX() + MathUtils.random(-2, 2) : spr.getX();
         float drawY = spr.getY();
         
-        // Renderizar sistema multicapa en orden: Low → Middle → Top
-        
-        // CAPA LOW: Propulsión (fondo)
         drawPropulsionLayer(batch, drawX, drawY);
-        
-        // CAPA MIDDLE: Base/esqueleto de la nave
-        if (middleBaseRegion != null) {
-            batch.draw(middleBaseRegion, drawX, drawY, targetWidth, targetHeight);
-        }
-        
-        // CAPA TOP: Estados de vida (encima de todo)
+        drawMiddleLayer(batch, drawX, drawY);
+        drawBonusEffectLayer(batch, drawX, drawY);
         drawLifeStateLayer(batch, drawX, drawY);
         
-        // Sistema de sprite legacy (mantener por compatibilidad pero hacerlo invisible)
-        // El sprite legacy no se dibuja, pero mantiene su lógica de posición
-        
-        // Dibujar hitbox en modo testing
         if (DEBUG_DRAW_HITBOX) {
             // Cerrar batch para usar ShapeRenderer
             batch.end();
@@ -324,8 +412,7 @@ public class Nave extends GameObject {
     
     private void drawPropulsionLayer(SpriteBatch batch, float x, float y) {
         Animation<TextureRegion> currentAnimation = null;
-        
-        // Seleccionar la animación correcta según el estado actual
+
         switch (currentPropulsionState) {
             case IDLE:
                 currentAnimation = idleAnimation;
@@ -338,7 +425,6 @@ public class Nave extends GameObject {
                 break;
         }
         
-        // Dibujar el frame actual de la animación seleccionada
         if (currentAnimation != null) {
             TextureRegion currentFrame = currentAnimation.getKeyFrame(animationTime);
             if (currentFrame != null) {
@@ -347,9 +433,31 @@ public class Nave extends GameObject {
         }
     }
     
+    private void drawMiddleLayer(SpriteBatch batch, float x, float y) {
+        if (isShooting) {
+            if (basicShootingAnimation != null) {
+                TextureRegion basicFrame = basicShootingAnimation.getKeyFrame(shootingAnimationTime);
+                if (basicFrame != null) {
+                    batch.draw(basicFrame, x, y, targetWidth, targetHeight);
+                }
+            }
+        } else if (middleBaseRegion != null) {
+            batch.draw(middleBaseRegion, x, y, targetWidth, targetHeight);
+        }
+    }
+    
+    private void drawBonusEffectLayer(SpriteBatch batch, float x, float y) {
+        if (bonusShootingBehavior != null && bonusShootingBehavior.isActive() && isShooting) {
+            if (bonusShootingBehavior instanceof puppy.code.entities.bonus.BonusAutocannon) {
+                puppy.code.entities.bonus.BonusAutocannon bonus = 
+                    (puppy.code.entities.bonus.BonusAutocannon) bonusShootingBehavior;
+                bonus.renderEffect(batch, this);
+            }
+        }
+    }
+    
     private void drawLifeStateLayer(SpriteBatch batch, float x, float y) {
         if (mainShipAtlas != null) {
-            // Determinar el estado de vida actual basado en el healthSystem
             String regionName = getLifeStateRegionName();
             TextureRegion lifeStateRegion = mainShipAtlas.findRegion(regionName);
             
@@ -377,8 +485,6 @@ public class Nave extends GameObject {
 
     @Override
     public Rectangle getBounds() {
-        // Crear hitbox basado en el 50% del area visible (sprite escalado)
-        // Esto asegura que el hitbox este centrado y sea mucho mas restrictivo que la imagen completa
         float preciseWidth = spr.getWidth() * 0.5f;
         float preciseHeight = spr.getHeight() * 0.5f;
 
@@ -389,20 +495,13 @@ public class Nave extends GameObject {
     }
     
     public void handleInput(PantallaJuego juego) {
-        // Disparo automático mientras se mantiene presionada la tecla SPACE
-        if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
-            currentWeapon.fire(spr.getX() + spr.getWidth() / 2 - 5, spr.getY() + spr.getHeight() - 5, juego.getProjectileManager());
-        }
-        
-        // Cerrar juego con ESC
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             Gdx.app.exit();
         }
     }
       
     public boolean checkCollision(MeteoriteEnemy b) {
-    if (!herido && b.getBounds().overlaps(getBounds())) {
-            // Rebote simplificado
+    if (!herido && !invincible && b.getBounds().overlaps(getBounds())) {
             float pushForce = 20f;
             
             float centerX = spr.getX() + spr.getWidth() / 2;
@@ -421,7 +520,6 @@ public class Nave extends GameObject {
                 float newX = spr.getX() + deltaX * pushForce;
                 float newY = spr.getY() + deltaY * pushForce;
                 
-                // Usar dimensiones exactas del sprite para limites
                 if (newX >= 0 && newX + spr.getWidth() <= 1920) {
                     spr.setX(newX);
                     x = newX;
@@ -432,10 +530,7 @@ public class Nave extends GameObject {
                 }
             }
             
-            // Solo cambiar direccion horizontal del asteroide, mantener vertical hacia abajo
-            b.velocityX = -b.velocityX; // Rebotar horizontalmente
-            // NO cambiar velocityY para que siga yendo hacia abajo
-            // Asegurar que vaya hacia abajo si por alguna razon esta yendo hacia arriba
+            b.velocityX = -b.velocityX;
             if (b.velocityY > 0) {
                 b.velocityY = -Math.abs(b.velocityY);
             }
@@ -456,7 +551,7 @@ public class Nave extends GameObject {
     }
     
     public boolean estaDestruido() {
-        return destruida; // Si esta destruida, no importa si esta herida
+        return destruida;
     }
     
     public boolean estaHerido() {
@@ -479,7 +574,6 @@ public class Nave extends GameObject {
         healthSystem.render(batch, 30, 1030);
     }
     
-    // Método para cambiar armas dinamicamente
     public void setWeapon(Weapon newWeapon) {
         this.currentWeapon = newWeapon;
     }
@@ -488,16 +582,34 @@ public class Nave extends GameObject {
         return currentWeapon;
     }
     
+    
+    public ShipStats getShipStats() {
+        return shipStats;
+    }
+    
+    public void resetStats() {
+        shipStats.resetToDefaults();
+    }
+    
+    public boolean isInvincible() {
+        return invincible;
+    }
+    
+    public void setInvincible(boolean invincible) {
+        this.invincible = invincible;
+    }
+    
     public void dispose() {
-        // SISTEMA MULTICAPA: shipTextures obsoleto, ahora se usan atlas
-        
-        // Liberar recursos multicapa
         if (mainShipAtlas != null) {
             mainShipAtlas.dispose();
         }
         
         if (middleBaseRegion != null && middleBaseRegion.getTexture() != null) {
             middleBaseRegion.getTexture().dispose();
+        }
+        
+        if (basicCannonAtlas != null) {
+            basicCannonAtlas.dispose();
         }
         
         if (shapeRenderer != null) {

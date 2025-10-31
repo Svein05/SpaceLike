@@ -1,0 +1,24 @@
+Ship Basic Cannon.png
+size:512,64
+repeat:none
+Ship Autocannon lv0_01
+index:7
+bounds:2,2,48,48
+Ship Autocannon lv0_02
+index:4
+bounds:52,2,48,48
+Ship Autocannon lv0_03
+index:1
+bounds:102,2,48,48
+Ship Autocannon lv0_04
+index:2
+bounds:102,2,48,48
+Ship Autocannon lv0_05
+index:6
+bounds:152,2,48,48
+Ship Autocannon lv0_06
+index:3
+bounds:202,2,48,48
+Ship Autocannon lv0_07
+index:5
+bounds:252,2,48,48

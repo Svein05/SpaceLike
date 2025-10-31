@@ -20,19 +20,16 @@ public class WaveConfiguration {
         enemySpawns.add(new EnemySpawnData(type, count));
     }
     
-    // Getters
     public int getRound() { return round; }
     public ArrayList<EnemySpawnData> getEnemySpawns() { return enemySpawns; }
     public int getBaseVelocityX() { return baseVelocityX; }
     public int getBaseVelocityY() { return baseVelocityY; }
     
-    // Setters para configuracion
     public void setBaseVelocity(int velX, int velY) {
         this.baseVelocityX = velX;
         this.baseVelocityY = velY;
     }
     
-    // Clase interna para datos de spawn
     public static class EnemySpawnData {
         public final EnemyType type;
         public final int count;

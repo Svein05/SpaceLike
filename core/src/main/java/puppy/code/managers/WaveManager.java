@@ -22,31 +22,25 @@ public class WaveManager {
     }
     
     private void initializeWaveConfigurations() {
-        // Round 1: Pocos asteroides para empezar
         WaveConfiguration wave1 = new WaveConfiguration(1);
         wave1.addEnemySpawn(EnemyType.METEORITE, 3);
         wave1.setBaseVelocity(2, 3);
         waveConfigurations.put(1, wave1);
         
-        // Round 2: Incremento moderado
         WaveConfiguration wave2 = new WaveConfiguration(2);
         wave2.addEnemySpawn(EnemyType.METEORITE, 5);
         wave2.setBaseVelocity(2, 3);
         waveConfigurations.put(2, wave2);
         
-        // Round 3: Mas asteroides
         WaveConfiguration wave3 = new WaveConfiguration(3);
         wave3.addEnemySpawn(EnemyType.METEORITE, 7);
         wave3.setBaseVelocity(3, 4);
         waveConfigurations.put(3, wave3);
         
-        // Round 4: Incremento significativo
         WaveConfiguration wave4 = new WaveConfiguration(4);
         wave4.addEnemySpawn(EnemyType.METEORITE, 10);
         wave4.setBaseVelocity(3, 4);
         waveConfigurations.put(4, wave4);
-        
-        // Round 5+: Configuracion escalada dinamicamente
     }
     
     public ArrayList<Enemy> startWave(int round) {
@@ -63,7 +57,7 @@ public class WaveManager {
                 config.getBaseVelocityX(),
                 config.getBaseVelocityY(),
                 waveEnemies,
-                round // Pasar el round para vida escalable
+                round
             );
         }
         
@@ -74,7 +68,6 @@ public class WaveManager {
         WaveConfiguration config = waveConfigurations.get(round);
         
         if (config == null) {
-            // Configuracion dinamica para rounds altos
             config = createDynamicWaveConfiguration(round);
         }
         
@@ -84,15 +77,10 @@ public class WaveManager {
     private WaveConfiguration createDynamicWaveConfiguration(int round) {
         WaveConfiguration config = new WaveConfiguration(round);
         
-        // Escalado progresivo pero razonable de asteroides
-        // Formula: 3 base + 2 por ronda, maximo 25 para evitar sobrecarga
         int meteoriteCount = Math.min(3 + (round * 2), 25);
         
-        // Eliminar otros tipos de enemigos por ahora, solo asteroides
         config.addEnemySpawn(EnemyType.METEORITE, meteoriteCount);
         
-        // Velocidad base escalada moderadamente
-        // Formula: 2-4 velocidad base, incremento cada 3 rondas
         int baseVelX = Math.min(2 + (round / 3), 4);
         int baseVelY = Math.min(3 + (round / 3), 5);
         config.setBaseVelocity(baseVelX, baseVelY);
@@ -112,7 +100,6 @@ public class WaveManager {
         return currentRound;
     }
     
-    // Metodo para obtener info de la wave actual
     public WaveConfiguration getCurrentWaveInfo() {
         return getWaveConfiguration(currentRound);
     }

@@ -10,7 +10,6 @@ public class GameStateManager {
     private boolean gameOver;
     private boolean paused;
     
-    // Configuracion del juego
     private int asteroidVelocityX;
     private int asteroidVelocityY;
     private int asteroidCount;
@@ -58,7 +57,6 @@ public class GameStateManager {
         }
     }
     
-    // Getters y setters
     public int getScore() { return score; }
     public int getLives() { return lives; }
     public int getRound() { return round; }
