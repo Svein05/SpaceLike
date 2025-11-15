@@ -12,6 +12,7 @@ public class ShipStats {
     private float fireRateMultiplier = 1.0f;
     private float projectileSpeedMultiplier = 1.0f;
     private float defenseMultiplier = 1.0f;
+    private float damageMultiplier = 1.0f;
     
     // === SALUD ===
     
@@ -71,6 +72,20 @@ public class ShipStats {
         return defenseMultiplier;
     }
     
+    // === DANO ===
+    
+    public float getDamageMultiplier() {
+        return damageMultiplier;
+    }
+    
+    public void addDamageUpgrade(float percentIncrease) {
+        damageMultiplier += percentIncrease;
+    }
+    
+    public float calculateDamage(float baseDamage) {
+        return baseDamage * damageMultiplier;
+    }
+    
     // === UTILIDADES ===
     
     public void resetToDefaults() {
@@ -78,13 +93,14 @@ public class ShipStats {
         fireRateMultiplier = 1.0f;
         projectileSpeedMultiplier = 1.0f;
         defenseMultiplier = 1.0f;
+        damageMultiplier = 1.0f;
     }
     
     public String getStatsString() {
         return String.format(
-            "ShipStats: Health=%.1fx (Max: %d), FireRate=%.1fx, Speed=%.1fx, Defense=%.1fx",
+            "ShipStats: Health=%.2fx (Max: %d), FireRate=%.2fx, Speed=%.2fx, Defense=%.2fx, Damage=%.2fx",
             healthMultiplier, getMaxHealth(), 
-            fireRateMultiplier, projectileSpeedMultiplier, defenseMultiplier
+            fireRateMultiplier, projectileSpeedMultiplier, defenseMultiplier, damageMultiplier
         );
     }
     

@@ -14,11 +14,16 @@ public class CollisionSystem {
     private GameStateManager gameState;
     private XPSystem xpSystem;
     private ResourceManager resourceManager;
+    private Nave nave;
     
     public CollisionSystem(XPSystem xpSystem) {
         this.gameState = GameStateManager.getInstance();
         this.xpSystem = xpSystem;
         this.resourceManager = ResourceManager.getInstance();
+    }
+    
+    public void setNave(Nave nave) {
+        this.nave = nave;
     }
     
     public void checkBulletCollisions(ArrayList<Projectile> projectiles, ArrayList<MeteoriteEnemy> enemies1, ArrayList<MeteoriteEnemy> enemies2, ProjectileManager projectileManager) {
@@ -77,8 +82,29 @@ public class CollisionSystem {
                 }
                 
                 if (projectile.getBounds().overlaps(enemy.getBounds())) {
-                    int damage = projectile.getDamage();
-                    enemy.takeDamage(damage);
+                    int baseDamage = projectile.getDamage();
+                    int finalDamage = baseDamage;
+                    
+                    if (nave != null && nave.getShipStats() != null) {
+                        float calculatedDamage = nave.getShipStats().calculateDamage(baseDamage);
+                        finalDamage = Math.round(calculatedDamage);
+                    }
+                    
+                    int healthBefore = enemy.getHealth();
+                    enemy.takeDamage(finalDamage);
+                    int healthAfter = enemy.getHealth();
+                    
+                    System.out.println("=== DAMAGE LOG ===");
+                    System.out.println("Enemy Type: " + enemy.getClass().getSimpleName());
+                    System.out.println("Health Before: " + healthBefore);
+                    System.out.println("Base Damage: " + baseDamage);
+                    System.out.println("Final Damage (with multiplier): " + finalDamage);
+                    System.out.println("Health After: " + healthAfter);
+                    if (nave != null && nave.getShipStats() != null) {
+                        System.out.println("Damage Multiplier: " + nave.getShipStats().getDamageMultiplier());
+                        System.out.println("Calculated Damage (float): " + nave.getShipStats().calculateDamage(baseDamage));
+                    }
+                    System.out.println("==================");
 
                     if (enemy.isDestroyed()) {
                         if (!(enemy instanceof puppy.code.entities.enemies.MeteoriteEnemy)) {

@@ -1,7 +1,7 @@
 package puppy.code.entities.projectiles;
 
 public enum ProjectileType {
-    BULLET("Rocket2.png", 10, 300, 1, 0.5f, "pop-sound.mp3");
+    BULLET("Rocket2.png", 10, 300, 5, 0.5f, "pop-sound.mp3");
     
     private final String texturePath;
     private final float width;

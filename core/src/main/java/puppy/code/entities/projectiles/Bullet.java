@@ -11,7 +11,7 @@ public class Bullet extends Projectile {
     private Sprite spr;
     
     public Bullet(float x, float y, float xSpeed, float ySpeed, Texture tx) {
-        super(x, y, 8, 16, xSpeed, ySpeed, 1);
+        super(x, y, 8, 16, xSpeed, ySpeed, ProjectileType.BULLET.getDamage());
         spr = new Sprite(tx);
         spr.setPosition(x, y);
     }

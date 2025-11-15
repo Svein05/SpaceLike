@@ -110,9 +110,11 @@ public class BonusAutocannon extends GameObject implements Bonus, ShootingBehavi
             return;
         }
         
-        TextureRegion effectFrame = effectAnimation.getKeyFrame(animationTime);
+        float effectiveFireRate = nave.getShipStats().getEffectiveFireRate(ProjectileType.BULLET);
+        float animationSpeed = effectiveFireRate / 0.5f;
+        
+        TextureRegion effectFrame = effectAnimation.getKeyFrame(animationTime * animationSpeed);
         if (effectFrame != null) {
-            // Renderizar efecto sobre la nave
             batch.draw(effectFrame, nave.getX(), nave.getY(), nave.getWidth(), nave.getHeight());
         }
     }

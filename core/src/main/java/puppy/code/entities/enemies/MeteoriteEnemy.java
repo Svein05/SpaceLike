@@ -90,7 +90,7 @@ public class MeteoriteEnemy extends Enemy {
     }
     
     private static int calculateHealthForRound(int round) {
-        return Math.min(1 + round, 8);
+        return Math.min((1 + round) * 5, 40);
     }
 
     @Override

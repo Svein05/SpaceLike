@@ -9,6 +9,7 @@ public class XPSystem {
     private int currentLevel;
     private int xpToNextLevel;
     private boolean leveledUp;
+    private boolean levelUpConsumed;
     private float levelUpMessageTimer;
     private static final float LEVEL_UP_MESSAGE_DURATION = 2.0f;
     private GlyphLayout layout;
@@ -18,6 +19,7 @@ public class XPSystem {
         this.currentLevel = 1;
         this.xpToNextLevel = 100;
         this.leveledUp = false;
+        this.levelUpConsumed = true;
         this.levelUpMessageTimer = 0;
         this.layout = new GlyphLayout();
     }
@@ -33,6 +35,7 @@ public class XPSystem {
             currentXP -= xpToNextLevel;
             xpToNextLevel = (int)(xpToNextLevel * 1.5f);
             leveledUp = true;
+            levelUpConsumed = false;
             levelUpMessageTimer = LEVEL_UP_MESSAGE_DURATION;
         }
     }
@@ -51,6 +54,7 @@ public class XPSystem {
         String xpText = "XP: " + currentXP + " / " + xpToNextLevel;
         
         font.getData().setScale(1.5f);
+        font.setColor(1, 1, 1, 1);
         
         layout.setText(font, levelText);
         float levelX = (screenWidth - layout.width) / 2;
@@ -64,9 +68,11 @@ public class XPSystem {
         if (leveledUp) {
             String levelUpText = "¡Has subido de nivel!";
             font.getData().setScale(2.0f);
+            font.setColor(1, 1, 0, 1);
             layout.setText(font, levelUpText);
             float levelUpX = (screenWidth - layout.width) / 2;
             font.draw(batch, levelUpText, levelUpX, 600);
+            font.setColor(1, 1, 1, 1);
         }
     }
     
@@ -83,6 +89,10 @@ public class XPSystem {
     }
     
     public boolean hasLeveledUp() {
-        return leveledUp;
+        return !levelUpConsumed && leveledUp;
+    }
+    
+    public void consumeLevelUp() {
+        levelUpConsumed = true;
     }
 }

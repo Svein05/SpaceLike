@@ -9,6 +9,7 @@ import java.util.Random;
 public class BonusManager {
     private Bonus activeBonus;
     private BonusType activeBonusType;
+    private BonusType lastSpawnedBonusType;
     private BonusState currentState;
     private float timer;
     private Random random;
@@ -68,7 +69,18 @@ public class BonusManager {
         float randomX = random.nextFloat() * (SCREEN_WIDTH - 44f);
         
         BonusType[] types = BonusType.values();
-        activeBonusType = types[random.nextInt(types.length)];
+        
+        if (types.length > 1) {
+            BonusType newBonusType;
+            do {
+                newBonusType = types[random.nextInt(types.length)];
+            } while (newBonusType == lastSpawnedBonusType);
+            activeBonusType = newBonusType;
+        } else {
+            activeBonusType = types[0];
+        }
+        
+        lastSpawnedBonusType = activeBonusType;
         
         switch (activeBonusType) {
             case AUTOCANNON:
@@ -124,6 +136,7 @@ public class BonusManager {
             activeBonus.dispose();
             activeBonus = null;
         }
+        activeBonusType = null;
         currentState = BonusState.WAITING_TO_SPAWN;
         timer = PENALTY_INTERVAL;
     }
@@ -131,7 +144,10 @@ public class BonusManager {
     private void effectExpired() {
         if (activeBonus != null) {
             activeBonus.deactivateEffect();
+            activeBonus.dispose();
+            activeBonus = null;
         }
+        activeBonusType = null;
         currentState = BonusState.WAITING_TO_SPAWN;
         timer = SPAWN_INTERVAL;
     }
@@ -151,10 +167,11 @@ public class BonusManager {
                     break;
             }
         } else {
-            if (activeBonusType == BonusType.AUTOCANNON && nave.getShootingBehavior() != null) {
-                removeBonusFromShip(nave);
-            } else if (activeBonusType == BonusType.SHIELD && nave.isInvincible()) {
-                removeBonusFromShip(nave);
+            if (nave.getShootingBehavior() != null) {
+                nave.setBonusShootingBehavior(null);
+            }
+            if (nave.isInvincible()) {
+                nave.setInvincible(false);
             }
         }
     }
@@ -177,6 +194,17 @@ public class BonusManager {
     
     public float getRemainingTime() {
         return timer;
+    }
+    
+    public void saveState() {
+        // Guardar tiempo restante para poder restaurarlo
+    }
+    
+    public void forceExpireBonus(puppy.code.entities.Nave nave) {
+        if (currentState == BonusState.EFFECT_ACTIVE) {
+            removeBonusFromShip(nave);
+            effectExpired();
+        }
     }
     
     public void dispose() {

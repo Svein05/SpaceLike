@@ -14,6 +14,7 @@ import puppy.code.SpaceNavigation;
 import puppy.code.graphics.ParallaxBackground;
 import puppy.code.entities.Nave;
 import puppy.code.systems.XPSystem;
+import puppy.code.systems.LevelSystem;
 import puppy.code.systems.CollisionSystem;
 import puppy.code.managers.ProjectileManager;
 import puppy.code.managers.GameStateManager;
@@ -36,7 +37,10 @@ public class PantallaJuego implements Screen {
     private Nave nave;
     private ParallaxBackground parallaxBackground;
     private boolean shouldDisposeParallax = true;
+    private boolean shouldDisposeNave = true;
+    private boolean isTransitioningToLevelUp = false;
     private XPSystem xpSystem;
+    private LevelSystem levelSystem;
     
     private ProjectileManager projectileManager;
     private GameStateManager gameState;
@@ -57,6 +61,21 @@ public class PantallaJuego implements Screen {
     public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,  
             int velXAsteroides, int velYAsteroides, int cantAsteroides, XPSystem xpSystem, ParallaxBackground existingParallax,
             float naveX, float naveY) {
+        this(game, ronda, vidas, score, velXAsteroides, velYAsteroides, cantAsteroides, 
+             xpSystem, existingParallax, naveX, naveY, null, null);
+    }
+    
+    public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,  
+            int velXAsteroides, int velYAsteroides, int cantAsteroides, XPSystem xpSystem, 
+            ParallaxBackground existingParallax, float naveX, float naveY, Nave existingNave) {
+        this(game, ronda, vidas, score, velXAsteroides, velYAsteroides, cantAsteroides, 
+             xpSystem, existingParallax, naveX, naveY, existingNave, null);
+    }
+    
+    public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,  
+            int velXAsteroides, int velYAsteroides, int cantAsteroides, XPSystem xpSystem, 
+            ParallaxBackground existingParallax, float naveX, float naveY, Nave existingNave, 
+            puppy.code.managers.BonusManager existingBonusManager) {
         this.game = game;
         this.ronda = ronda;
         this.velXAsteroides = velXAsteroides;
@@ -81,7 +100,12 @@ public class PantallaJuego implements Screen {
         projectileManager = new ProjectileManager();
         gameState = GameStateManager.getInstance();
         enemyManager = new EnemyManager();
-        bonusManager = new BonusManager();
+        
+        if (existingBonusManager != null) {
+            bonusManager = existingBonusManager;
+        } else {
+            bonusManager = new BonusManager();
+        }
         
         gameState.setScore(score);
         
@@ -90,6 +114,8 @@ public class PantallaJuego implements Screen {
         } else {
             this.xpSystem = new XPSystem();
         }
+        
+        this.levelSystem = new LevelSystem(this.xpSystem);
         
         collisionSystem = new CollisionSystem(this.xpSystem);
         
@@ -104,16 +130,24 @@ public class PantallaJuego implements Screen {
         int inicialX = (naveX >= 0) ? (int)naveX : Gdx.graphics.getWidth() / 2 - 50;
         int inicialY = (naveY >= 0) ? (int)naveY : 30;
         
-        nave = new Nave(inicialX, inicialY, 
-                        Gdx.audio.newSound(Gdx.files.internal("hurt.ogg")));
-        nave.setVidas(vidas);
+        if (existingNave != null) {
+            nave = existingNave;
+            shouldDisposeNave = false;
+        } else {
+            nave = new Nave(inicialX, inicialY, 
+                            Gdx.audio.newSound(Gdx.files.internal("hurt.ogg")));
+            nave.setVidas(vidas);
+        }
+        
+        collisionSystem.setNave(nave);
         
         enemyManager.startWave(ronda);
     }
     
     public void dibujaEncabezado() {
         CharSequence str = "Ronda: " + ronda;
-        game.getFont().getData().setScale(2f);        
+        game.getFont().getData().setScale(2f);
+        game.getFont().setColor(1, 1, 1, 1);
         game.getFont().draw(batch, str, 30, 50);
         game.getFont().draw(batch, "Score:" + gameState.getScore(), 1920 - 300, 50);
         game.getFont().draw(batch, "HighScore:" + game.getHighScore(), 1920 / 2 - 150, 50);
@@ -142,6 +176,23 @@ public class PantallaJuego implements Screen {
         handleShipShooting();
 
         xpSystem.update(delta);
+        levelSystem.update();
+        
+        if (levelSystem.shouldShowLevelUpScreen() && !isTransitioningToLevelUp) {
+            isTransitioningToLevelUp = true;
+            int currentScore = gameState.getScore();
+            gameMusic.pause();
+            
+            bonusManager.forceExpireBonus(nave);
+            
+            Screen ss = new PantallaUpgrade(game, this, nave, parallaxBackground, 
+                                           xpSystem, levelSystem, ronda, currentScore,
+                                           velXAsteroides, velYAsteroides, cantAsteroides, bonusManager);
+            ss.resize(1920, 1080);
+            game.setScreen(ss);
+            return;
+        }
+        
         projectileManager.update(delta);
         enemyManager.update(delta);
         bonusManager.update(delta);
@@ -203,7 +254,7 @@ public class PantallaJuego implements Screen {
             shouldDisposeParallax = false;
             Screen ss = new PantallaJuego(game, ronda + 1, nave.getVidas(), currentScore, 
                     velXAsteroides + 3, velYAsteroides + 3, cantAsteroides + 10, xpSystem, parallaxBackground,
-                    currentNaveX, currentNaveY);
+                    currentNaveX, currentNaveY, nave);
             ss.resize(1920, 1080);
             game.setScreen(ss);
             gameMusic.dispose();
@@ -268,7 +319,7 @@ public class PantallaJuego implements Screen {
             enemyManager.clearAllEnemies();
         }
         
-        if (nave != null) {
+        if (nave != null && shouldDisposeNave) {
             nave.dispose();
         }
         
