@@ -11,13 +11,15 @@ public class ProjectileFactory {
     }
     
     public Projectile createProjectile(ProjectileType type, float x, float y, float velocityX, float velocityY) {
-        Texture texture = resourceManager.getTexture(type.getTexturePath());
-        
         switch (type) {
             case BULLET:
+                Texture texture = resourceManager.getTexture(type.getTexturePath());
                 return new Bullet(x, y, velocityX, velocityY, texture);
+            case ENEMY_BALL:
+                return new EnemyBall(x, y, velocityX, velocityY);
             default:
-                return new Bullet(x, y, velocityX, velocityY, texture);
+                Texture defaultTexture = resourceManager.getTexture(type.getTexturePath());
+                return new Bullet(x, y, velocityX, velocityY, defaultTexture);
         }
     }
 

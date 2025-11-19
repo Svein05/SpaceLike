@@ -15,8 +15,11 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import puppy.code.entities.enemies.MeteoriteEnemy;
+import puppy.code.entities.enemies.Enemy;
 import puppy.code.screens.PantallaJuego;
 import puppy.code.systems.HealthSystem;
+import puppy.code.systems.TurboSystem;
+import puppy.code.upgrades.SpinnerSystem;
 import puppy.code.interfaces.Weapon;
 import puppy.code.interfaces.ShootingBehavior;
 import puppy.code.weapons.BasicCannon;
@@ -28,15 +31,26 @@ public class Nave extends GameObject {
     private Sound sonidoHerido;
     public static boolean DEBUG_DRAW_HITBOX = false;
     private ShapeRenderer shapeRenderer = null;
+    private ShapeRenderer homingIndicatorRenderer = null;
     private boolean herido = false;
     private int tiempoHeridoMax = 50;
     private int tiempoHerido;
     private float velocidadX = 0f;
     private float velocidadY = 0f;
     private static final float ACELERACION = 0.3f;
-    private static final float VELOCIDAD_MAXIMA = 5f;
+    private float velocidadMaximaBase = 5f;
+    private float velocidadMaximaActual = 5f;
     private static final float FRICCION = 0.96f;
     private static final float UMBRAL_PARADA = 0.1f;
+    
+    private TurboSystem turboSystem;
+    private boolean turboActive = false;
+    private static final float TURBO_MULTIPLIER = 2.0f;
+    
+    private SpinnerSystem spinnerSystem;
+    
+    private boolean homingEnabled = true;
+    private boolean cKeyPressed = false;
     
     // Sistema de corazones
     private HealthSystem healthSystem;
@@ -56,6 +70,10 @@ public class Nave extends GameObject {
     private Animation<TextureRegion> idleAnimation;
     private Animation<TextureRegion> powerAnimation;
     private Animation<TextureRegion> powerVerticalAnimation;
+    
+    private Animation<TextureRegion> turboIdleAnimation;
+    private Animation<TextureRegion> turboPowerAnimation;
+    private Animation<TextureRegion> turboPowerVerticalAnimation;
     
     // Sistema de animacion de disparo
     private TextureAtlas basicCannonAtlas;
@@ -125,6 +143,9 @@ public class Nave extends GameObject {
         
         shipStats = new ShipStats();
         healthSystem = new HealthSystem(shipStats);
+        turboSystem = new TurboSystem();
+        homingIndicatorRenderer = new ShapeRenderer();
+        spinnerSystem = new SpinnerSystem();
 
         if (DEBUG_DRAW_HITBOX) {
             shapeRenderer = new ShapeRenderer();
@@ -148,6 +169,7 @@ public class Nave extends GameObject {
             createShootingAnimation();
             
             createPropulsionAnimations();
+            createTurboAnimations();
         } catch (Exception e) {
             System.err.println("Error cargando assets multicapa: " + e.getMessage());
             e.printStackTrace();
@@ -182,6 +204,29 @@ public class Nave extends GameObject {
         powerVerticalAnimation.setPlayMode(Animation.PlayMode.LOOP);
     }
     
+    private void createTurboAnimations() {
+        try {
+            TextureAtlas turboAtlas = new TextureAtlas(Gdx.files.internal("Game/Nave/Propulsion/Ship Supercharge.atlas"));
+            
+            TextureRegion[] turboFrames = new TextureRegion[4];
+            turboFrames[0] = turboAtlas.findRegion("Ship Supercharge - 0001");
+            turboFrames[1] = turboAtlas.findRegion("Ship Supercharge - 0002");
+            turboFrames[2] = turboAtlas.findRegion("Ship Supercharge - 0003");
+            turboFrames[3] = turboAtlas.findRegion("Ship Supercharge - 0004");
+            
+            turboIdleAnimation = new Animation<>(ANIMATION_FRAME_DURATION * 0.6f, turboFrames);
+            turboIdleAnimation.setPlayMode(Animation.PlayMode.LOOP);
+            
+            turboPowerAnimation = new Animation<>(ANIMATION_FRAME_DURATION * 0.5f, turboFrames);
+            turboPowerAnimation.setPlayMode(Animation.PlayMode.LOOP);
+            
+            turboPowerVerticalAnimation = new Animation<>(ANIMATION_FRAME_DURATION * 0.5f, turboFrames);
+            turboPowerVerticalAnimation.setPlayMode(Animation.PlayMode.LOOP);
+        } catch (Exception e) {
+            System.err.println("Error cargando animaciones de turbo: " + e.getMessage());
+        }
+    }
+    
     private void createShootingAnimation() {
         if (basicCannonAtlas != null) {
             TextureRegion[] basicFrames = new TextureRegion[7];
@@ -212,14 +257,34 @@ public class Nave extends GameObject {
         }
         
         if (!herido) {
+            boolean shiftPressed = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT);
+            
+            if (shiftPressed && turboSystem.canUseTurbo()) {
+                turboActive = true;
+                velocidadMaximaActual = velocidadMaximaBase * TURBO_MULTIPLIER;
+                turboSystem.consumeStamina(delta);
+            } else {
+                turboActive = false;
+                velocidadMaximaActual = velocidadMaximaBase;
+                turboSystem.regenerateStamina(delta);
+            }
+            
             float aceleracionX = 0f;
             float aceleracionY = 0f;
             
-            // Detectar entrada de controles WASD
             if (Gdx.input.isKeyPressed(Input.Keys.W)) aceleracionY += ACELERACION;
             if (Gdx.input.isKeyPressed(Input.Keys.S)) aceleracionY -= ACELERACION;
             if (Gdx.input.isKeyPressed(Input.Keys.A)) aceleracionX -= ACELERACION;
             if (Gdx.input.isKeyPressed(Input.Keys.D)) aceleracionX += ACELERACION;
+            
+            if (Gdx.input.isKeyPressed(Input.Keys.C)) {
+                if (!cKeyPressed) {
+                    homingEnabled = !homingEnabled;
+                    cKeyPressed = true;
+                }
+            } else {
+                cKeyPressed = false;
+            }
             
             // Detectar disparo continuo
             if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
@@ -237,8 +302,8 @@ public class Nave extends GameObject {
             velocidadY += aceleracionY;
             
             float velocidadTotal = (float) Math.sqrt(velocidadX * velocidadX + velocidadY * velocidadY);
-            if (velocidadTotal > VELOCIDAD_MAXIMA) {
-                float factor = VELOCIDAD_MAXIMA / velocidadTotal;
+            if (velocidadTotal > velocidadMaximaActual) {
+                float factor = velocidadMaximaActual / velocidadTotal;
                 velocidadX *= factor;
                 velocidadY *= factor;
             }
@@ -272,6 +337,10 @@ public class Nave extends GameObject {
         updatePropulsionState();
         updateShootingAnimation(delta);
         animationTime += delta;
+        
+        if (spinnerSystem != null) {
+            spinnerSystem.update(delta, x, y, targetWidth, targetHeight);
+        }
     }
     
     private void updatePropulsionState() {
@@ -389,6 +458,10 @@ public class Nave extends GameObject {
 
     @Override
     public void draw(SpriteBatch batch) {
+        if (spinnerSystem != null) {
+            spinnerSystem.render(batch);
+        }
+        
         float drawX = herido ? spr.getX() + MathUtils.random(-2, 2) : spr.getX();
         float drawY = spr.getY();
         
@@ -413,16 +486,30 @@ public class Nave extends GameObject {
     private void drawPropulsionLayer(SpriteBatch batch, float x, float y) {
         Animation<TextureRegion> currentAnimation = null;
 
-        switch (currentPropulsionState) {
-            case IDLE:
-                currentAnimation = idleAnimation;
-                break;
-            case POWER:
-                currentAnimation = powerAnimation;
-                break;
-            case POWER_VERTICAL:
-                currentAnimation = powerVerticalAnimation;
-                break;
+        if (turboActive) {
+            switch (currentPropulsionState) {
+                case IDLE:
+                    currentAnimation = turboIdleAnimation != null ? turboIdleAnimation : idleAnimation;
+                    break;
+                case POWER:
+                    currentAnimation = turboPowerAnimation != null ? turboPowerAnimation : powerAnimation;
+                    break;
+                case POWER_VERTICAL:
+                    currentAnimation = turboPowerVerticalAnimation != null ? turboPowerVerticalAnimation : powerVerticalAnimation;
+                    break;
+            }
+        } else {
+            switch (currentPropulsionState) {
+                case IDLE:
+                    currentAnimation = idleAnimation;
+                    break;
+                case POWER:
+                    currentAnimation = powerAnimation;
+                    break;
+                case POWER_VERTICAL:
+                    currentAnimation = powerVerticalAnimation;
+                    break;
+            }
         }
         
         if (currentAnimation != null) {
@@ -550,12 +637,71 @@ public class Nave extends GameObject {
         return false;
     }
     
+    public boolean checkCollision(Enemy enemy) {
+        if (!herido && !invincible && enemy.getBounds().overlaps(getBounds())) {
+            float pushForce = 20f;
+            
+            float centerX = spr.getX() + spr.getWidth() / 2;
+            float centerY = spr.getY() + spr.getHeight() / 2;
+            float enemyCenterX = enemy.getX() + enemy.getWidth() / 2;
+            float enemyCenterY = enemy.getY() + enemy.getHeight() / 2;
+            
+            float deltaX = centerX - enemyCenterX;
+            float deltaY = centerY - enemyCenterY;
+            float distance = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            
+            if (distance > 0) {
+                deltaX /= distance;
+                deltaY /= distance;
+                
+                float newX = spr.getX() + deltaX * pushForce;
+                float newY = spr.getY() + deltaY * pushForce;
+                
+                if (newX >= 0 && newX + spr.getWidth() <= 1920) {
+                    spr.setX(newX);
+                    x = newX;
+                }
+                if (newY >= 0 && newY + spr.getHeight() <= 1080) {
+                    spr.setY(newY);
+                    y = newY;
+                }
+            }
+            
+            healthSystem.takeDamage();
+            herido = true;
+            tiempoHerido = tiempoHeridoMax;
+            
+            velocidadX = 0f;
+            velocidadY = 0f;
+            
+            sonidoHerido.play();
+            if (healthSystem.isDead()) 
+                destruida = true; 
+            return true;
+        }
+        return false;
+    }
+    
     public boolean estaDestruido() {
         return destruida;
     }
     
     public boolean estaHerido() {
         return herido;
+    }
+    
+    public void takeDamage() {
+        if (!herido && !invincible) {
+            healthSystem.takeDamage();
+            herido = true;
+            tiempoHerido = tiempoHeridoMax;
+            velocidadX = 0f;
+            velocidadY = 0f;
+            sonidoHerido.play();
+            if (healthSystem.isDead()) {
+                destruida = true;
+            }
+        }
     }
     
     public int getVidas() {
@@ -572,6 +718,26 @@ public class Nave extends GameObject {
     
     public void renderHealthHearts(SpriteBatch batch) {
         healthSystem.render(batch, 30, 1030);
+    }
+    
+    public void renderHomingIndicator(SpriteBatch batch) {
+        if (shipStats.getHomingPrecision() <= 0) return;
+        
+        batch.end();
+        
+        homingIndicatorRenderer.setProjectionMatrix(batch.getProjectionMatrix());
+        homingIndicatorRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        
+        if (homingEnabled) {
+            homingIndicatorRenderer.setColor(0f, 1f, 0f, 1f);
+        } else {
+            homingIndicatorRenderer.setColor(1f, 0f, 0f, 1f);
+        }
+        
+        homingIndicatorRenderer.circle(50, 540, 15);
+        homingIndicatorRenderer.end();
+        
+        batch.begin();
     }
     
     public void setWeapon(Weapon newWeapon) {
@@ -620,5 +786,38 @@ public class Nave extends GameObject {
             }
             shapeRenderer = null;
         }
+        
+        if (turboSystem != null) {
+            turboSystem.dispose();
+        }
+        
+        if (homingIndicatorRenderer != null) {
+            try {
+                homingIndicatorRenderer.dispose();
+            } catch (Exception e) {
+                System.err.println("Error liberando homingIndicatorRenderer: " + e.getMessage());
+            }
+            homingIndicatorRenderer = null;
+        }
+        
+        if (spinnerSystem != null) {
+            spinnerSystem.dispose();
+        }
+    }
+    
+    public TurboSystem getTurboSystem() {
+        return turboSystem;
+    }
+    
+    public boolean isTurboActive() {
+        return turboActive;
+    }
+    
+    public boolean isHomingEnabled() {
+        return homingEnabled;
+    }
+    
+    public SpinnerSystem getSpinnerSystem() {
+        return spinnerSystem;
     }
 }

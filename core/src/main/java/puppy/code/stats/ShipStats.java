@@ -13,6 +13,10 @@ public class ShipStats {
     private float projectileSpeedMultiplier = 1.0f;
     private float defenseMultiplier = 1.0f;
     private float damageMultiplier = 1.0f;
+    private float homingPrecision = 0.0f;
+    private boolean spinnerUnlocked = false;
+    private int spinnerCount = 0;
+    private float spinnerDamageMultiplier = 1.0f;
     
     // === SALUD ===
     
@@ -86,6 +90,57 @@ public class ShipStats {
         return baseDamage * damageMultiplier;
     }
     
+    // === TELEDIRIGIDO ===
+    
+    public float getHomingPrecision() {
+        return homingPrecision;
+    }
+    
+    public void addHomingUpgrade(float percentIncrease) {
+        homingPrecision = Math.min(1.0f, homingPrecision + percentIncrease);
+    }
+    
+    public void setHomingPrecision(float precision) {
+        this.homingPrecision = Math.max(0.0f, Math.min(1.0f, precision));
+    }
+    
+    // === SPINNER ===
+    
+    public boolean isSpinnerUnlocked() {
+        return spinnerUnlocked;
+    }
+    
+    public void unlockSpinner() {
+        spinnerUnlocked = true;
+        spinnerCount = 1;
+    }
+    
+    public int getSpinnerCount() {
+        return spinnerCount;
+    }
+    
+    public void addSpinner() {
+        if (spinnerCount < 10) {
+            spinnerCount++;
+        }
+    }
+    
+    public void setSpinnerCount(int count) {
+        this.spinnerCount = Math.min(count, 10);
+    }
+    
+    public float getSpinnerDamageMultiplier() {
+        return spinnerDamageMultiplier;
+    }
+    
+    public void addSpinnerDamageUpgrade(float percentIncrease) {
+        spinnerDamageMultiplier += percentIncrease;
+    }
+    
+    public void setSpinnerDamageMultiplier(float multiplier) {
+        this.spinnerDamageMultiplier = multiplier;
+    }
+    
     // === UTILIDADES ===
     
     public void resetToDefaults() {
@@ -94,6 +149,10 @@ public class ShipStats {
         projectileSpeedMultiplier = 1.0f;
         defenseMultiplier = 1.0f;
         damageMultiplier = 1.0f;
+        homingPrecision = 0.0f;
+        spinnerUnlocked = false;
+        spinnerCount = 0;
+        spinnerDamageMultiplier = 1.0f;
     }
     
     public String getStatsString() {

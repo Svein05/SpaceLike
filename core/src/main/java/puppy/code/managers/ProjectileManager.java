@@ -10,6 +10,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import puppy.code.entities.projectiles.Projectile;
 import puppy.code.entities.projectiles.ProjectileFactory;
 import puppy.code.entities.projectiles.ProjectileType;
+import puppy.code.entities.projectiles.Bullet;
+import puppy.code.entities.enemies.Enemy;
+import puppy.code.entities.Nave;
 
 public class ProjectileManager {
     private ArrayList<Projectile> activeProjectiles;
@@ -17,6 +20,8 @@ public class ProjectileManager {
     private static final int POOL_SIZE_PER_TYPE = 20;
     private ProjectileFactory factory;
     private ResourceManager resourceManager;
+    private Nave nave;
+    private ArrayList<Enemy> enemies;
     
     public ProjectileManager() {
         activeProjectiles = new ArrayList<>();
@@ -74,18 +79,29 @@ public class ProjectileManager {
     }
     
     private ProjectileType getProjectileType(Projectile projectile) {
-        String className = projectile.getClass().getSimpleName().toUpperCase();
-        try {
-            return ProjectileType.valueOf(className);
-        } catch (IllegalArgumentException e) {
+        String className = projectile.getClass().getSimpleName();
+        
+        if (className.equals("Bullet")) {
             return ProjectileType.BULLET;
+        } else if (className.equals("EnemyBall")) {
+            return ProjectileType.ENEMY_BALL;
         }
+        
+        return ProjectileType.BULLET;
     }
     
     public void update(float delta) {
         Iterator<Projectile> iterator = activeProjectiles.iterator();
         while (iterator.hasNext()) {
             Projectile projectile = iterator.next();
+            
+            if (projectile instanceof Bullet && nave != null && enemies != null) {
+                Bullet bullet = (Bullet) projectile;
+                bullet.setHomingEnabled(nave.isHomingEnabled());
+                bullet.setHomingPrecision(nave.getShipStats().getHomingPrecision());
+                bullet.setEnemies(enemies);
+            }
+            
             projectile.update(delta);
             
             if (isOutOfBounds(projectile)) {
@@ -121,5 +137,13 @@ public class ProjectileManager {
             returnToPool(projectile, getProjectileType(projectile));
         }
         activeProjectiles.clear();
+    }
+    
+    public void setNave(Nave nave) {
+        this.nave = nave;
+    }
+    
+    public void setEnemies(ArrayList<Enemy> enemies) {
+        this.enemies = enemies;
     }
 }

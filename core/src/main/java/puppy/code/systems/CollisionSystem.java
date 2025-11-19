@@ -70,6 +70,8 @@ public class CollisionSystem {
             Projectile projectile = projectiles.get(i);
             if (projectile.isDestroyed()) continue;
             
+            if (projectile instanceof puppy.code.entities.projectiles.EnemyBall) continue;
+            
             for (int j = enemies.size() - 1; j >= 0; j--) {
                 Enemy enemy = enemies.get(j);
                 if (enemy.isDestroyed()) continue;
@@ -135,8 +137,83 @@ public class CollisionSystem {
         for (Enemy enemy : enemies) {
             if (enemy.isDestroyed()) continue;
             
-            if (enemy instanceof MeteoriteEnemy) {
-                if (nave.checkCollision((MeteoriteEnemy) enemy)) {
+            if (nave.checkCollision(enemy)) {
+                break;
+            }
+        }
+    }
+    
+    public void checkEnemyProjectileShipCollisions(ArrayList<Projectile> projectiles, Nave nave, ProjectileManager projectileManager) {
+        if (nave.estaHerido()) return;
+        
+        for (int i = projectiles.size() - 1; i >= 0; i--) {
+            Projectile projectile = projectiles.get(i);
+            if (projectile.isDestroyed()) continue;
+            
+            if (!(projectile instanceof puppy.code.entities.projectiles.EnemyBall)) continue;
+            
+            if (projectile.getBounds().overlaps(nave.getBounds())) {
+                nave.takeDamage();
+                
+                projectile.destroy();
+                projectileManager.removeProjectile(projectile);
+                break;
+            }
+        }
+    }
+    
+    public void checkSpinnerEnemyCollisions(puppy.code.upgrades.SpinnerSystem spinnerSystem, ArrayList<Enemy> enemies) {
+        if (spinnerSystem == null) return;
+        
+        ArrayList<puppy.code.upgrades.SpinnerSystem.SpinnerBall> spinners = spinnerSystem.getSpinners();
+        int spinnerDamage = spinnerSystem.getDamage();
+        
+        for (puppy.code.upgrades.SpinnerSystem.SpinnerBall spinner : spinners) {
+            for (int j = enemies.size() - 1; j >= 0; j--) {
+                Enemy enemy = enemies.get(j);
+                if (enemy.isDestroyed()) continue;
+                
+                if (enemy instanceof puppy.code.entities.enemies.MeteoriteEnemy) {
+                    puppy.code.entities.enemies.MeteoriteEnemy asteroid = (puppy.code.entities.enemies.MeteoriteEnemy) enemy;
+                    if (asteroid.isExploding()) continue;
+                }
+                
+                if (spinner.getBounds().overlaps(enemy.getBounds())) {
+                    enemy.takeDamage(spinnerDamage);
+                    
+                    if (enemy.isDestroyed()) {
+                        if (!(enemy instanceof puppy.code.entities.enemies.MeteoriteEnemy)) {
+                            try {
+                                resourceManager.getSound(enemy.getDestructionSound()).play();
+                            } catch (Exception e) {}
+                        }
+                        
+                        gameState.addScore(enemy.getScoreValue());
+                        if (xpSystem != null) {
+                            xpSystem.addXP(enemy.getXPValue());
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    
+    public void checkSpinnerProjectileCollisions(puppy.code.upgrades.SpinnerSystem spinnerSystem, ArrayList<Projectile> projectiles, ProjectileManager projectileManager) {
+        if (spinnerSystem == null) return;
+        
+        ArrayList<puppy.code.upgrades.SpinnerSystem.SpinnerBall> spinners = spinnerSystem.getSpinners();
+        
+        for (puppy.code.upgrades.SpinnerSystem.SpinnerBall spinner : spinners) {
+            for (int i = projectiles.size() - 1; i >= 0; i--) {
+                Projectile projectile = projectiles.get(i);
+                if (projectile.isDestroyed()) continue;
+                
+                if (!(projectile instanceof puppy.code.entities.projectiles.EnemyBall)) continue;
+                
+                if (spinner.getBounds().overlaps(projectile.getBounds())) {
+                    projectile.destroy();
+                    projectileManager.removeProjectile(projectile);
                     break;
                 }
             }

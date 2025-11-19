@@ -95,4 +95,12 @@ public class XPSystem {
     public void consumeLevelUp() {
         levelUpConsumed = true;
     }
+    
+    public void forceLevelUp() {
+        currentLevel++;
+        xpToNextLevel = (int)(xpToNextLevel * 1.5f);
+        leveledUp = true;
+        levelUpConsumed = false;
+        levelUpMessageTimer = LEVEL_UP_MESSAGE_DURATION;
+    }
 }

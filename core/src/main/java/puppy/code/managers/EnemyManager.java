@@ -7,13 +7,10 @@ import puppy.code.entities.enemies.Enemy;
 public class EnemyManager {
     private ArrayList<Enemy> activeEnemies;
     private WaveManager waveManager;
-    private GameStateManager gameState;
-    private int logCounter = 0;
     
     public EnemyManager() {
         this.activeEnemies = new ArrayList<>();
         this.waveManager = new WaveManager();
-        this.gameState = GameStateManager.getInstance();
     }
     
     public void startWave(int round) {
@@ -44,6 +41,12 @@ public class EnemyManager {
         
         if (activeEnemies.isEmpty() && waveManager.isWaveActive()) {
             waveManager.endWave();
+        }
+    }
+    
+    public void updateEnemyShooting(ProjectileManager projectileManager) {
+        for (Enemy enemy : activeEnemies) {
+            enemy.performShoot(projectileManager);
         }
     }
     

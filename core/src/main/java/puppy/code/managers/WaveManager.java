@@ -1,46 +1,18 @@
 package puppy.code.managers;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import puppy.code.entities.enemies.Enemy;
 import puppy.code.entities.enemies.EnemyType;
 
 public class WaveManager {
     private final EnemySpawner enemySpawner;
-    private final Map<Integer, WaveConfiguration> waveConfigurations;
     private int currentRound;
     private boolean waveActive;
     
     public WaveManager() {
         this.enemySpawner = new EnemySpawner();
-        this.waveConfigurations = new HashMap<>();
         this.currentRound = 1;
         this.waveActive = false;
-        
-        initializeWaveConfigurations();
-    }
-    
-    private void initializeWaveConfigurations() {
-        WaveConfiguration wave1 = new WaveConfiguration(1);
-        wave1.addEnemySpawn(EnemyType.METEORITE, 3);
-        wave1.setBaseVelocity(2, 3);
-        waveConfigurations.put(1, wave1);
-        
-        WaveConfiguration wave2 = new WaveConfiguration(2);
-        wave2.addEnemySpawn(EnemyType.METEORITE, 5);
-        wave2.setBaseVelocity(2, 3);
-        waveConfigurations.put(2, wave2);
-        
-        WaveConfiguration wave3 = new WaveConfiguration(3);
-        wave3.addEnemySpawn(EnemyType.METEORITE, 7);
-        wave3.setBaseVelocity(3, 4);
-        waveConfigurations.put(3, wave3);
-        
-        WaveConfiguration wave4 = new WaveConfiguration(4);
-        wave4.addEnemySpawn(EnemyType.METEORITE, 10);
-        wave4.setBaseVelocity(3, 4);
-        waveConfigurations.put(4, wave4);
     }
     
     public ArrayList<Enemy> startWave(int round) {
@@ -65,27 +37,33 @@ public class WaveManager {
     }
     
     private WaveConfiguration getWaveConfiguration(int round) {
-        WaveConfiguration config = waveConfigurations.get(round);
-        
-        if (config == null) {
-            config = createDynamicWaveConfiguration(round);
-        }
-        
-        return config;
+        return createDynamicWaveConfiguration(round);
     }
     
     private WaveConfiguration createDynamicWaveConfiguration(int round) {
         WaveConfiguration config = new WaveConfiguration(round);
         
-        int meteoriteCount = Math.min(3 + (round * 2), 25);
-        
+        int meteoriteCount = Math.min(3 + ((round - 1) * 2), 15);
         config.addEnemySpawn(EnemyType.METEORITE, meteoriteCount);
+        
+        if (round >= 2) {
+            int enemyShip1Count = calculateEnemyShip1Count(round);
+            config.addEnemySpawn(EnemyType.ENEMYSHIP1, enemyShip1Count);
+        }
         
         int baseVelX = Math.min(2 + (round / 3), 4);
         int baseVelY = Math.min(3 + (round / 3), 5);
         config.setBaseVelocity(baseVelX, baseVelY);
         
         return config;
+    }
+    
+    private int calculateEnemyShip1Count(int round) {
+        double x = round - 2;
+        double count = -0.15 * x * x + 2.5 * x + 1;
+        
+        int result = (int) Math.round(count);
+        return Math.max(1, Math.min(result, 8));
     }
     
     public void endWave() {

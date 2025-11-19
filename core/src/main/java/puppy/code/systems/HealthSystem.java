@@ -57,8 +57,7 @@ public class HealthSystem {
     
     public void takeDamage(float baseDamage) {
         if (currentHealth > 0) {
-            float actualDamage = shipStats.calculateDamageReceived(baseDamage);
-            currentHealth -= actualDamage;
+            currentHealth -= 1.0f;
             if (currentHealth < 0) {
                 currentHealth = 0;
             }

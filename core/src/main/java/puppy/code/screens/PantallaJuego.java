@@ -141,6 +141,8 @@ public class PantallaJuego implements Screen {
         
         collisionSystem.setNave(nave);
         
+        projectileManager.setNave(nave);
+        
         enemyManager.startWave(ronda);
     }
     
@@ -194,7 +196,9 @@ public class PantallaJuego implements Screen {
         }
         
         projectileManager.update(delta);
+        projectileManager.setEnemies(enemyManager.getActiveEnemies());
         enemyManager.update(delta);
+        enemyManager.updateEnemyShooting(projectileManager);
         bonusManager.update(delta);
         bonusManager.updateShipBehavior(nave);
         
@@ -206,6 +210,25 @@ public class PantallaJuego implements Screen {
             );
 
             collisionSystem.checkShipEnemyCollisions(nave, enemyManager.getActiveEnemies());
+            
+            collisionSystem.checkEnemyProjectileShipCollisions(
+                projectileManager.getActiveProjectiles(),
+                nave,
+                projectileManager
+            );
+            
+            if (nave.getSpinnerSystem() != null) {
+                collisionSystem.checkSpinnerEnemyCollisions(
+                    nave.getSpinnerSystem(),
+                    enemyManager.getActiveEnemies()
+                );
+                
+                collisionSystem.checkSpinnerProjectileCollisions(
+                    nave.getSpinnerSystem(),
+                    projectileManager.getActiveProjectiles(),
+                    projectileManager
+                );
+            }
 
             checkBonusCollisions();
         }
@@ -227,6 +250,12 @@ public class PantallaJuego implements Screen {
         
         nave.renderHealthHearts(batch);
         
+        nave.renderHomingIndicator(batch);
+        
+        if (nave.getTurboSystem() != null) {
+            nave.getTurboSystem().render(batch);
+        }
+        
         
         batch.end();
         
@@ -244,8 +273,7 @@ public class PantallaJuego implements Screen {
         if (enemyManager.isWaveComplete()) {
             int currentScore = gameState.getScore();
             if (xpSystem != null) {
-                int xpReward = 50 * ronda;
-                xpSystem.addXP(xpReward);
+                xpSystem.forceLevelUp();
             }
             
             float currentNaveX = nave.getX();

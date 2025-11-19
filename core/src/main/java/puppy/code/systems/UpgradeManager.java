@@ -13,14 +13,10 @@ public class UpgradeManager {
             case HEALTH:
                 stats.addHealthUpgrade(upgradeType.getValue());
                 nave.getHealthSystem().refreshFromStats();
-                float healAmount = upgradeType.getValue() * ShipStats.getBaseMaxHealth();
+                int heartIncrease = (int)(upgradeType.getValue() * ShipStats.getBaseMaxHealth());
                 nave.getHealthSystem().setVidas(
-                    nave.getHealthSystem().getVidas() + (int)Math.ceil(healAmount / 2.0f)
+                    nave.getHealthSystem().getVidas() + heartIncrease
                 );
-                break;
-                
-            case DEFENSE:
-                stats.addDefenseUpgrade(upgradeType.getValue());
                 break;
                 
             case DAMAGE:
@@ -29,6 +25,33 @@ public class UpgradeManager {
                 
             case FIRE_RATE:
                 stats.addFireRateUpgrade(upgradeType.getValue());
+                break;
+                
+            case HOMING:
+                stats.addHomingUpgrade(upgradeType.getValue());
+                break;
+                
+            case SPINNER_UNLOCK:
+                stats.unlockSpinner();
+                if (nave.getSpinnerSystem() != null) {
+                    nave.getSpinnerSystem().setSpinnerCount(1);
+                    nave.getSpinnerSystem().setDamageMultiplier(stats.getSpinnerDamageMultiplier());
+                }
+                break;
+                
+            case SPINNER_COUNT:
+                stats.addSpinner();
+                if (nave.getSpinnerSystem() != null) {
+                    nave.getSpinnerSystem().setSpinnerCount(stats.getSpinnerCount());
+                    nave.getSpinnerSystem().setDamageMultiplier(stats.getSpinnerDamageMultiplier());
+                }
+                break;
+                
+            case SPINNER_DAMAGE:
+                stats.addSpinnerDamageUpgrade(upgradeType.getValue());
+                if (nave.getSpinnerSystem() != null) {
+                    nave.getSpinnerSystem().setDamageMultiplier(stats.getSpinnerDamageMultiplier());
+                }
                 break;
         }
     }

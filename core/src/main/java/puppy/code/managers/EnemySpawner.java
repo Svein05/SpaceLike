@@ -1,20 +1,35 @@
 package puppy.code.managers;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import com.badlogic.gdx.graphics.Texture;
 import puppy.code.entities.enemies.Enemy;
 import puppy.code.entities.enemies.EnemyType;
 import puppy.code.entities.enemies.MeteoriteEnemy;
 import puppy.code.entities.enemies.BossEnemy;
-import puppy.code.entities.enemies.SpecialEnemy;
+import puppy.code.entities.enemies.factories.EnemyFactory;
+import puppy.code.entities.enemies.factories.MeteoriteEnemyFactory;
+import puppy.code.entities.enemies.factories.ShooterEnemyFactory;
+import puppy.code.entities.enemies.factories.EnemyShip1Factory;
 
 public class EnemySpawner {
     private Random random;
     private ResourceManager resourceManager;
+    private Map<EnemyType, EnemyFactory> factories;
     
     public EnemySpawner() {
         this.random = new Random();
         this.resourceManager = ResourceManager.getInstance();
+        this.factories = new HashMap<>();
+        
+        initializeFactories();
+    }
+    
+    private void initializeFactories() {
+        factories.put(EnemyType.METEORITE, new MeteoriteEnemyFactory());
+        factories.put(EnemyType.SPECIAL, new ShooterEnemyFactory());
+        factories.put(EnemyType.ENEMYSHIP1, new EnemyShip1Factory());
     }
     
     public Enemy spawnEnemy(EnemyType type, float x, float y, float velocityX, float velocityY) {
@@ -22,16 +37,16 @@ public class EnemySpawner {
     }
     
     public Enemy spawnEnemy(EnemyType type, float x, float y, float velocityX, float velocityY, int round) {
+        EnemyFactory factory = factories.get(type);
+        
+        if (factory != null) {
+            return factory.createCompleteEnemy(x, y, velocityX, velocityY, round);
+        }
+        
         switch (type) {
-            case METEORITE:
-                return new MeteoriteEnemy((int)x, (int)y, (int)type.getSize(), 
-                                        (int)velocityX, (int)velocityY, round);
             case BOSS:
                 Texture bossTexture = resourceManager.getTexture(type.getTexturePath());
                 return new BossEnemy(x, y, bossTexture);
-            case SPECIAL:
-                Texture specialTexture = resourceManager.getTexture(type.getTexturePath());
-                return new SpecialEnemy(x, y, specialTexture);
             default:
                 return new MeteoriteEnemy((int)x, (int)y, (int)type.getSize(), 
                                         (int)velocityX, (int)velocityY, round);
@@ -63,5 +78,13 @@ public class EnemySpawner {
             Enemy enemy = spawnEnemyRandom(type, velX, velY, round);
             enemies.add(enemy);
         }
+    }
+    
+    public void registerFactory(EnemyType type, EnemyFactory factory) {
+        factories.put(type, factory);
+    }
+    
+    public EnemyFactory getFactory(EnemyType type) {
+        return factories.get(type);
     }
 }

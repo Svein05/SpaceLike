@@ -86,6 +86,23 @@ public class PantallaUpgrade implements Screen {
         UpgradeType[] allTypes = UpgradeType.values();
         List<UpgradeType> availableTypes = new ArrayList<>();
         for (UpgradeType type : allTypes) {
+            if (type == UpgradeType.SPINNER_UNLOCK) {
+                if (nave.getShipStats().isSpinnerUnlocked()) {
+                    continue;
+                }
+            }
+            
+            if (type == UpgradeType.SPINNER_COUNT) {
+                if (!nave.getShipStats().isSpinnerUnlocked() || nave.getShipStats().getSpinnerCount() >= 10) {
+                    continue;
+                }
+            }
+            
+            if (type == UpgradeType.SPINNER_DAMAGE) {
+                if (!nave.getShipStats().isSpinnerUnlocked()) {
+                    continue;
+                }
+            }
             availableTypes.add(type);
         }
         
