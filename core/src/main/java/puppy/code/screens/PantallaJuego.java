@@ -126,7 +126,7 @@ public class PantallaJuego implements Screen {
             tutorialSystem = new TutorialSystem();
         }
         
-        explosionSound = Gdx.audio.newSound(Gdx.files.internal("explosion.ogg"));
+        explosionSound = Gdx.audio.newSound(Gdx.files.internal("Audio/SFX/Explosions/Boom10.mp3"));
         explosionSound.setVolume(1, 0.5f);
         
         // Inicializar música según la ronda

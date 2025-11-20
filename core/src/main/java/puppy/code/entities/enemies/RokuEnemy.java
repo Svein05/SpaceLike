@@ -94,7 +94,7 @@ public class RokuEnemy extends Enemy {
 
     @Override
     public String getDestructionSound() {
-        return "explosion.ogg";
+        return "Audio/SFX/Explosions/Boom10.mp3";
     }
     
     public boolean hasReachedTarget() {

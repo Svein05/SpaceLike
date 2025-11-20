@@ -254,7 +254,7 @@ public class MeteoriteEnemy extends Enemy {
 
     @Override
     public String getDestructionSound() {
-        return "explosion.ogg";
+        return "Audio/SFX/Explosions/explosion.mp3";
     }
     
     public int getMaxHealth() {

@@ -7,6 +7,7 @@ import puppy.code.entities.bonus.BonusHeal;
 import puppy.code.entities.bonus.BonusType;
 import puppy.code.interfaces.Bonus;
 import java.util.Random;
+import com.badlogic.gdx.audio.Sound;
 
 public class BonusManager {
     private Bonus activeBonus;
@@ -15,6 +16,7 @@ public class BonusManager {
     private BonusState currentState;
     private float timer;
     private Random random;
+    private ResourceManager resourceManager;
     
     private static final float SPAWN_INTERVAL = 15f;
     private static final float PENALTY_INTERVAL = 30f;
@@ -33,6 +35,7 @@ public class BonusManager {
         random = new Random();
         currentState = BonusState.WAITING_TO_SPAWN;
         timer = SPAWN_INTERVAL;
+        resourceManager = ResourceManager.getInstance();
     }
     
     public void update(float delta) {
@@ -105,6 +108,9 @@ public class BonusManager {
     public void bonusCollected(puppy.code.entities.Nave nave) {
         if (currentState == BonusState.FALLING && activeBonus != null) {
             activeBonus.collect();
+            
+            // Reproducir sonido según el tipo de bonus
+            playBonusSound(activeBonusType);
             
             if (activeBonusType != BonusType.HEAL) {
                 activeBonus.activateEffect();
@@ -248,6 +254,31 @@ public class BonusManager {
         if (currentState == BonusState.EFFECT_ACTIVE) {
             removeBonusFromShip(nave);
             effectExpired();
+        }
+    }
+    
+    /**
+     * Reproduce el sonido apropiado según el tipo de bonus recogido
+     */
+    private void playBonusSound(BonusType bonusType) {
+        try {
+            Sound bonusSound;
+            switch (bonusType) {
+                case HEAL:
+                    bonusSound = resourceManager.getSound("Audio/SFX/Player/PowerUp6.mp3");
+                    break;
+                case SHIELD:
+                    bonusSound = resourceManager.getSound("Audio/SFX/Player/PowerUp34.mp3");
+                    break;
+                case AUTOCANNON:
+                case OMNISHOT:
+                default:
+                    bonusSound = resourceManager.getSound("Audio/SFX/Player/powerUp.mp3");
+                    break;
+            }
+            bonusSound.play(0.7f); // Volumen al 70%
+        } catch (Exception e) {
+            System.out.println("Error reproduciendo sonido de bonus: " + e.getMessage());
         }
     }
     

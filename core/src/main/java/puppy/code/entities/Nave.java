@@ -447,12 +447,14 @@ public class Nave extends GameObject {
     
     private void executeBasicShoot(puppy.code.managers.ProjectileManager projectileManager) {
         float effectiveSpeed = shipStats.getEffectiveProjectileSpeed(puppy.code.entities.projectiles.ProjectileType.BULLET);
+        // Solo reproducir sonido en el disparo básico (primera bala)
         projectileManager.createProjectile(
             puppy.code.entities.projectiles.ProjectileType.BULLET,
             getCenterShootX(), 
             getCenterShootY(), 
             0, 
-            effectiveSpeed
+            effectiveSpeed,
+            true  // Reproducir sonido solo aquí
         );
     }
 

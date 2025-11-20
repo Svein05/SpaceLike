@@ -81,7 +81,20 @@ public class ResourceManager {
     public void preloadCommonResources() {
         getTexture("Rocket2.png");
         
-        getSound("hurt.ogg");
+        // Sonidos del jugador (daño y power-ups)
+        getSound("hurt.ogg");  // Mantener por compatibilidad temporal
+        getSound("Audio/SFX/Player/powerUp.mp3");
+        getSound("Audio/SFX/Player/PowerUp34.mp3");
+        getSound("Audio/SFX/Player/PowerUp6.mp3");
+        
+        // Sonidos de armas
+        getSound("Audio/SFX/Weapons/Shoot19-_6_.mp3");
+        
+        // Sonidos de explosiones
+        getSound("Audio/SFX/Explosions/Boom10.mp3");
+        getSound("Audio/SFX/Explosions/explosion.mp3");
+        
+        // Sonidos antiguos (mantener por compatibilidad temporal)
         getSound("pop-sound.mp3");
         getSound("explosion.ogg");
         

@@ -40,6 +40,10 @@ public class ProjectileManager {
     }
     
     public void createProjectile(ProjectileType type, float x, float y, float velocityX, float velocityY) {
+        createProjectile(type, x, y, velocityX, velocityY, true);
+    }
+    
+    public void createProjectile(ProjectileType type, float x, float y, float velocityX, float velocityY, boolean playSound) {
         Projectile projectile = getPooledProjectile(type);
         if (projectile != null) {
             projectile.reset(x, y, velocityX, velocityY);
@@ -51,7 +55,14 @@ public class ProjectileManager {
             
             activeProjectiles.add(projectile);
             
-            resourceManager.getSound(type.getSoundPath()).play();
+            // Reproducir sonido con volumen fijo para evitar amplificación
+            if (playSound) {
+                if (type == ProjectileType.BULLET) {
+                    resourceManager.getSound(type.getSoundPath()).play(0.3f); // Volumen constante para disparo del jugador
+                } else {
+                    resourceManager.getSound(type.getSoundPath()).play(0.5f); // Volumen para disparos enemigos
+                }
+            }
         }
     }
     

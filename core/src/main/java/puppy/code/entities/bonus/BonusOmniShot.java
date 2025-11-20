@@ -113,12 +113,14 @@ public class BonusOmniShot extends GameObject implements Bonus, ShootingBehavior
             float velocityX = (float) Math.cos(radians) * effectiveSpeed;
             float velocityY = (float) Math.sin(radians) * effectiveSpeed;
             
+            // No reproducir sonido en los proyectiles adicionales (solo el central ya lo hace)
             projectileManager.createProjectile(
                 puppy.code.entities.projectiles.ProjectileType.BULLET,
                 centerX - 8,
                 centerY - 8,
                 velocityX,
-                velocityY
+                velocityY,
+                false  // Sin sonido
             );
         }
     }

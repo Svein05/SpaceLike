@@ -5,35 +5,26 @@
 PRIORIDAD ALTA
 --------------------------------------------------------------------------------
 [ ] Cambiar sprite temporal azul de BonusHeal por sprite final
-[ ] Balancear consumo de turbo (actualmente 33.75, probar valores)
 [ ] Revisar spawn rate de enemigos en rondas avanzadas
-
+[ ] Revisar bonus de amplificacion de dano
 UPGRADES PENDIENTES
 --------------------------------------------------------------------------------
-[ ] Escudo Temporal - Absorbe X hits antes de romperse (cooldown despues)
 [ ] Velocidad de Movimiento - Aumenta velocidad de la nave en 15%
-[ ] Disparo Penetrante - Las balas atraviesan multiples enemigos
-[ ] Recarga Rapida de Turbo - Reduce tiempo de regeneracion del turbo
 [ ] Proyectiles Explosivos - Las balas explotan al impactar (area de dano)
-[ ] Vida por Kill - Recupera 0.5 corazones cada X enemigos eliminados
-[ ] Magnetismo XP - Atrae experiencia desde mayor distancia
+[ ] Vida por Kill - Recupera 0.125 corazones cada X enemigos eliminados
 
 BONUS PENDIENTES
 --------------------------------------------------------------------------------
 [ ] Bonus Slow-Motion - Ralentiza el juego un 50% por 8 segundos
 [ ] Bonus Nuke - Elimina todos los enemigos en pantalla
-[ ] Bonus Invencibilidad - 5 segundos de invulnerabilidad total
 [ ] Bonus Double XP - Experiencia x2 por 15 segundos
 [ ] Bonus Rapid Fire - Cadencia x3 por 8 segundos
-[ ] Bonus Freeze - Congela enemigos en pantalla por 4 segundos
 
 ENEMIGOS PENDIENTES
 --------------------------------------------------------------------------------
 [ ] Tank Enemy - Muy lento, mucha vida, disparo pesado
 [ ] Splitter Enemy - Al morir se divide en 2 enemigos mas pequenos
-[ ] Shield Enemy - Tiene escudo frontal que bloquea balas
 [ ] Kamikaze Enemy - Se lanza directo a la nave al detectarla
-[ ] Healer Enemy - Cura a enemigos cercanos, prioridad de eliminacion
 [ ] Teleporter Enemy - Se teletransporta cada X segundos
 [ ] Spawner Enemy - Genera mini-enemigos periodicamente
 
@@ -66,22 +57,16 @@ Fase 3 - Modo Berserk
 MEJORAS VISUALES
 --------------------------------------------------------------------------------
 [ ] Particulas de explosion mas detalladas para enemigos
-[ ] Efecto de trail para proyectiles del jugador
-[ ] Animacion de recogida de bonus (efecto de brillo)
-[ ] Feedback visual al recibir dano (screen shake + flash rojo)
 [ ] Barra de vida para enemigos con mucha salud (Boss, Tank)
 
 MEJORAS DE UI
 --------------------------------------------------------------------------------
 [ ] Contador de kills en pantalla
-[ ] Indicador de combo (kills consecutivos)
-[ ] Minimapa para enemigos fuera de pantalla
 [ ] Notificacion al recoger bonus (tooltip con nombre)
 [ ] Efecto de level-up mas llamativo
 
 AUDIO (PENDIENTE)
 --------------------------------------------------------------------------------
-[ ] SFX para recoger bonus
 [ ] SFX para curacion
 [ ] SFX para turbo activado/desactivado
 [ ] SFX diferente por tipo de enemigo eliminado

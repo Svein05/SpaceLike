@@ -171,20 +171,14 @@ public class BonusAutocannon extends GameObject implements Bonus, ShootingBehavi
         
         float effectiveSpeed = nave.getShipStats().getEffectiveProjectileSpeed(ProjectileType.BULLET);
         
-        projectileManager.createProjectile(
-            ProjectileType.BULLET,
-            nave.getCenterShootX(), 
-            nave.getCenterShootY(), 
-            0, 
-            effectiveSpeed
-        );
-        
+        // Los proyectiles laterales no reproducen sonido (solo el central ya lo hace)
         projectileManager.createProjectile(
             ProjectileType.BULLET,
             nave.getLeftWingShootX(), 
             nave.getLeftWingShootY(), 
             0, 
-            effectiveSpeed
+            effectiveSpeed,
+            false  // Sin sonido
         );
         
         projectileManager.createProjectile(
@@ -192,7 +186,8 @@ public class BonusAutocannon extends GameObject implements Bonus, ShootingBehavi
             nave.getRightWingShootX(), 
             nave.getRightWingShootY(), 
             0, 
-            effectiveSpeed
+            effectiveSpeed,
+            false  // Sin sonido
         );
     }
     
