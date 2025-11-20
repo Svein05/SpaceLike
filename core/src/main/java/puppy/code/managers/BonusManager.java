@@ -2,6 +2,8 @@ package puppy.code.managers;
 
 import puppy.code.entities.bonus.BonusAutocannon;
 import puppy.code.entities.bonus.BonusShield;
+import puppy.code.entities.bonus.BonusOmniShot;
+import puppy.code.entities.bonus.BonusHeal;
 import puppy.code.entities.bonus.BonusType;
 import puppy.code.interfaces.Bonus;
 import java.util.Random;
@@ -89,21 +91,44 @@ public class BonusManager {
             case SHIELD:
                 activeBonus = new BonusShield(randomX, SPAWN_HEIGHT);
                 break;
+            case OMNISHOT:
+                activeBonus = new BonusOmniShot(randomX, SPAWN_HEIGHT);
+                break;
+            case HEAL:
+                activeBonus = new BonusHeal(randomX, SPAWN_HEIGHT);
+                break;
         }
         
         timer = 0f;
     }
     
-    public void bonusCollected() {
+    public void bonusCollected(puppy.code.entities.Nave nave) {
         if (currentState == BonusState.FALLING && activeBonus != null) {
             activeBonus.collect();
-            activeBonus.activateEffect();
-            currentState = BonusState.EFFECT_ACTIVE;
-            timer = BONUS_DURATION;
+            
+            if (activeBonusType != BonusType.HEAL) {
+                activeBonus.activateEffect();
+                currentState = BonusState.EFFECT_ACTIVE;
+                timer = BONUS_DURATION;
+            } else {
+                if (activeBonus instanceof BonusHeal) {
+                    BonusHeal healBonus = (BonusHeal) activeBonus;
+                    nave.getHealthSystem().heal(healBonus.getHealAmount());
+                }
+                activeBonus.dispose();
+                activeBonus = null;
+                activeBonusType = null;
+                currentState = BonusState.WAITING_TO_SPAWN;
+                timer = SPAWN_INTERVAL;
+            }
         }
     }
     
     public void applyBonusToShip(puppy.code.entities.Nave nave) {
+        if (activeBonusType == BonusType.HEAL) {
+            return;
+        }
+        
         if (currentState == BonusState.EFFECT_ACTIVE && activeBonus != null) {
             switch (activeBonusType) {
                 case AUTOCANNON:
@@ -113,6 +138,13 @@ public class BonusManager {
                     break;
                 case SHIELD:
                     nave.setInvincible(true);
+                    break;
+                case OMNISHOT:
+                    if (activeBonus instanceof BonusOmniShot) {
+                        nave.setBonusShootingBehavior((BonusOmniShot) activeBonus);
+                    }
+                    break;
+                case HEAL:
                     break;
             }
         }
@@ -126,6 +158,11 @@ public class BonusManager {
                     break;
                 case SHIELD:
                     nave.setInvincible(false);
+                    break;
+                case OMNISHOT:
+                    nave.setBonusShootingBehavior(null);
+                    break;
+                case HEAL:
                     break;
             }
         }
@@ -164,6 +201,13 @@ public class BonusManager {
                     if (!nave.isInvincible()) {
                         applyBonusToShip(nave);
                     }
+                    break;
+                case OMNISHOT:
+                    if (nave.getShootingBehavior() != activeBonus) {
+                        applyBonusToShip(nave);
+                    }
+                    break;
+                case HEAL:
                     break;
             }
         } else {

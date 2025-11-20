@@ -8,9 +8,9 @@ public class EnemyManager {
     private ArrayList<Enemy> activeEnemies;
     private WaveManager waveManager;
     
-    public EnemyManager() {
+    public EnemyManager(puppy.code.entities.Nave nave) {
         this.activeEnemies = new ArrayList<>();
-        this.waveManager = new WaveManager();
+        this.waveManager = new WaveManager(nave);
     }
     
     public void startWave(int round) {
@@ -54,6 +54,9 @@ public class EnemyManager {
         for (Enemy enemy : activeEnemies) {
             enemy.draw(batch);
         }
+    }
+    
+    public void dispose() {
     }
     
     public ArrayList<Enemy> getActiveEnemies() {

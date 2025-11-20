@@ -29,8 +29,8 @@ public class ZigZagMovement implements MovementBehavior {
         
         enemy.setX(enemy.getX() + velocityX * delta);
         
-        if (enemy instanceof puppy.code.entities.enemies.EnemyShip1) {
-            puppy.code.entities.enemies.EnemyShip1 ship = (puppy.code.entities.enemies.EnemyShip1) enemy;
+        if (enemy instanceof puppy.code.entities.enemies.RokuEnemy) {
+            puppy.code.entities.enemies.RokuEnemy ship = (puppy.code.entities.enemies.RokuEnemy) enemy;
             if (!ship.hasReachedTarget()) {
                 enemy.setY(enemy.getY() + baseVelocityY * delta * 60);
             }

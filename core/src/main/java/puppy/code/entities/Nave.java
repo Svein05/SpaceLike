@@ -38,8 +38,8 @@ public class Nave extends GameObject {
     private float velocidadX = 0f;
     private float velocidadY = 0f;
     private static final float ACELERACION = 0.3f;
-    private float velocidadMaximaBase = 5f;
-    private float velocidadMaximaActual = 5f;
+    private float velocidadMaximaBase = 7.5f;
+    private float velocidadMaximaActual = 7.5f;
     private static final float FRICCION = 0.96f;
     private static final float UMBRAL_PARADA = 0.1f;
     
@@ -272,10 +272,12 @@ public class Nave extends GameObject {
             float aceleracionX = 0f;
             float aceleracionY = 0f;
             
-            if (Gdx.input.isKeyPressed(Input.Keys.W)) aceleracionY += ACELERACION;
-            if (Gdx.input.isKeyPressed(Input.Keys.S)) aceleracionY -= ACELERACION;
-            if (Gdx.input.isKeyPressed(Input.Keys.A)) aceleracionX -= ACELERACION;
-            if (Gdx.input.isKeyPressed(Input.Keys.D)) aceleracionX += ACELERACION;
+            float aceleracionActual = turboActive ? ACELERACION * TURBO_MULTIPLIER : ACELERACION;
+            
+            if (Gdx.input.isKeyPressed(Input.Keys.W)) aceleracionY += aceleracionActual;
+            if (Gdx.input.isKeyPressed(Input.Keys.S)) aceleracionY -= aceleracionActual;
+            if (Gdx.input.isKeyPressed(Input.Keys.A)) aceleracionX -= aceleracionActual;
+            if (Gdx.input.isKeyPressed(Input.Keys.D)) aceleracionX += aceleracionActual;
             
             if (Gdx.input.isKeyPressed(Input.Keys.C)) {
                 if (!cKeyPressed) {
@@ -436,12 +438,10 @@ public class Nave extends GameObject {
     }
     
     public void executeShoot(puppy.code.managers.ProjectileManager projectileManager) {
+        executeBasicShoot(projectileManager);
+        
         if (bonusShootingBehavior != null && bonusShootingBehavior.isActive()) {
-            // Usar comportamiento del bonus
             bonusShootingBehavior.shoot(this, projectileManager);
-        } else {
-            // Usar disparo básico de la nave
-            executeBasicShoot(projectileManager);
         }
     }
     

@@ -21,8 +21,8 @@ public class TurboSystem {
     public TurboSystem() {
         this.maxStamina = 100f;
         this.currentStamina = maxStamina;
-        this.drainRate = 15f;
-        this.regenRate = 20f;
+        this.drainRate = 33.75f;
+        this.regenRate = 12f;
         this.canUseTurbo = true;
         this.shapeRenderer = new ShapeRenderer();
     }

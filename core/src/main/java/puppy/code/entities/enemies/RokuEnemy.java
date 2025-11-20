@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 
-public class EnemyShip1 extends Enemy {
+public class RokuEnemy extends Enemy {
     private Sprite sprite;
     private int maxHealth;
     private float damageFlashTimer;
@@ -14,7 +14,7 @@ public class EnemyShip1 extends Enemy {
     private float targetY;
     private boolean hasReachedTarget;
 
-    public EnemyShip1(float x, float y, Texture texture, int health, float speed) {
+    public RokuEnemy(float x, float y, Texture texture, int health, float speed) {
         super(x, y, 48, 48, health, speed);
         this.sprite = new Sprite(texture);
         this.sprite.setPosition(x, y);

@@ -16,6 +16,7 @@ import puppy.code.entities.Nave;
 import puppy.code.systems.XPSystem;
 import puppy.code.systems.LevelSystem;
 import puppy.code.systems.CollisionSystem;
+import puppy.code.systems.TutorialSystem;
 import puppy.code.managers.ProjectileManager;
 import puppy.code.managers.GameStateManager;
 import puppy.code.managers.EnemyManager;
@@ -47,6 +48,7 @@ public class PantallaJuego implements Screen {
     private CollisionSystem collisionSystem;
     private EnemyManager enemyManager;
     private BonusManager bonusManager;
+    private TutorialSystem tutorialSystem;
 
     public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,  
             int velXAsteroides, int velYAsteroides, int cantAsteroides) {
@@ -99,7 +101,6 @@ public class PantallaJuego implements Screen {
         // Inicializar managers
         projectileManager = new ProjectileManager();
         gameState = GameStateManager.getInstance();
-        enemyManager = new EnemyManager();
         
         if (existingBonusManager != null) {
             bonusManager = existingBonusManager;
@@ -118,6 +119,10 @@ public class PantallaJuego implements Screen {
         this.levelSystem = new LevelSystem(this.xpSystem);
         
         collisionSystem = new CollisionSystem(this.xpSystem);
+        
+        if (ronda == 1) {
+            tutorialSystem = new TutorialSystem();
+        }
         
         explosionSound = Gdx.audio.newSound(Gdx.files.internal("explosion.ogg"));
         explosionSound.setVolume(1, 0.5f);
@@ -138,6 +143,8 @@ public class PantallaJuego implements Screen {
                             Gdx.audio.newSound(Gdx.files.internal("hurt.ogg")));
             nave.setVidas(vidas);
         }
+        
+        enemyManager = new EnemyManager(nave);
         
         collisionSystem.setNave(nave);
         
@@ -256,6 +263,10 @@ public class PantallaJuego implements Screen {
             nave.getTurboSystem().render(batch);
         }
         
+        if (tutorialSystem != null) {
+            tutorialSystem.update(delta);
+            tutorialSystem.render(batch);
+        }
         
         batch.end();
         
@@ -271,6 +282,10 @@ public class PantallaJuego implements Screen {
         }
 
         if (enemyManager.isWaveComplete()) {
+            if (tutorialSystem != null) {
+                tutorialSystem.startFadeOut();
+            }
+            
             int currentScore = gameState.getScore();
             if (xpSystem != null) {
                 xpSystem.forceLevelUp();
@@ -317,8 +332,9 @@ public class PantallaJuego implements Screen {
     private void checkBonusCollisions() {
         if (bonusManager.getActiveBonus() != null && !bonusManager.getActiveBonus().isCollected()) {
             if (nave.getBounds().overlaps(bonusManager.getActiveBonus().getBounds())) {
-                bonusManager.bonusCollected();
-                gameState.addScore(bonusManager.getActiveBonus().getValue());
+                int bonusValue = bonusManager.getActiveBonus().getValue();
+                bonusManager.bonusCollected(nave);
+                gameState.addScore(bonusValue);
             }
         }
     }
@@ -353,6 +369,10 @@ public class PantallaJuego implements Screen {
         
         if (bonusManager != null) {
             bonusManager.dispose();
+        }
+        
+        if (tutorialSystem != null) {
+            tutorialSystem.dispose();
         }
     }
     

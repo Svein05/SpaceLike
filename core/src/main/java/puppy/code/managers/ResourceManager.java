@@ -8,6 +8,7 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 
 public class ResourceManager {
     private static ResourceManager instance;
@@ -16,12 +17,14 @@ public class ResourceManager {
     private Map<String, Sound> sounds;
     private Map<String, Music> music;
     private Map<String, BitmapFont> fonts;
+    private Map<String, TextureAtlas> atlases;
     
     private ResourceManager() {
         textures = new HashMap<>();
         sounds = new HashMap<>();
         music = new HashMap<>();
         fonts = new HashMap<>();
+        atlases = new HashMap<>();
     }
     
     public static ResourceManager getInstance() {
@@ -57,6 +60,13 @@ public class ResourceManager {
             fonts.put(path, new BitmapFont(Gdx.files.internal(path)));
         }
         return fonts.get(path);
+    }
+    
+    public TextureAtlas getAtlas(String path) {
+        if (!atlases.containsKey(path)) {
+            atlases.put(path, new TextureAtlas(Gdx.files.internal(path)));
+        }
+        return atlases.get(path);
     }
     
     public BitmapFont getDefaultFont() {
@@ -114,11 +124,15 @@ public class ResourceManager {
         for (BitmapFont font : fonts.values()) {
             font.dispose();
         }
+        for (TextureAtlas atlas : atlases.values()) {
+            atlas.dispose();
+        }
         
         textures.clear();
         sounds.clear();
         music.clear();
         fonts.clear();
+        atlases.clear();
     }
     
     public boolean isTextureLoaded(String path) {

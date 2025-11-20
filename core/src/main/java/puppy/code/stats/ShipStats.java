@@ -2,13 +2,12 @@ package puppy.code.stats;
 
 import puppy.code.entities.projectiles.ProjectileType;
 
-// Maneja las estadisticas modificables de la nave del jugador.
 public class ShipStats {
-    private static final int BASE_MAX_HEALTH = 6;
+    private static final float BASE_MAX_HEARTS = 3.0f;
     private static final float BASE_DEFENSE_MULTIPLIER = 1.0f;
     
     // Multiplicadores de upgrades
-    private float healthMultiplier = 1.0f;
+    private float healthUpgrade = 0.0f;
     private float fireRateMultiplier = 1.0f;
     private float projectileSpeedMultiplier = 1.0f;
     private float defenseMultiplier = 1.0f;
@@ -17,19 +16,20 @@ public class ShipStats {
     private boolean spinnerUnlocked = false;
     private int spinnerCount = 0;
     private float spinnerDamageMultiplier = 1.0f;
+    private int bouncingBulletsLevel = 0;
     
     // === SALUD ===
     
-    public int getMaxHealth() {
-        return Math.round(BASE_MAX_HEALTH * healthMultiplier);
+    public float getMaxHearts() {
+        return BASE_MAX_HEARTS + healthUpgrade;
     }
     
-    public void addHealthUpgrade(float percentIncrease) {
-        healthMultiplier += percentIncrease;
+    public void addHealthUpgrade(float heartsToAdd) {
+        healthUpgrade += heartsToAdd;
     }
     
-    public float getHealthMultiplier() {
-        return healthMultiplier;
+    public float getHealthUpgrade() {
+        return healthUpgrade;
     }
     
     // === VELOCIDAD DE DISPARO ===
@@ -141,10 +141,24 @@ public class ShipStats {
         this.spinnerDamageMultiplier = multiplier;
     }
     
+    // === REBOTE DE BALAS ===
+    
+    public int getBouncingBulletsLevel() {
+        return bouncingBulletsLevel;
+    }
+    
+    public void addBouncingBulletsLevel() {
+        bouncingBulletsLevel++;
+    }
+    
+    public void setBouncingBulletsLevel(int level) {
+        this.bouncingBulletsLevel = Math.max(0, level);
+    }
+    
     // === UTILIDADES ===
     
     public void resetToDefaults() {
-        healthMultiplier = 1.0f;
+        healthUpgrade = 0.0f;
         fireRateMultiplier = 1.0f;
         projectileSpeedMultiplier = 1.0f;
         defenseMultiplier = 1.0f;
@@ -153,20 +167,21 @@ public class ShipStats {
         spinnerUnlocked = false;
         spinnerCount = 0;
         spinnerDamageMultiplier = 1.0f;
+        bouncingBulletsLevel = 0;
     }
     
     public String getStatsString() {
         return String.format(
-            "ShipStats: Health=%.2fx (Max: %d), FireRate=%.2fx, Speed=%.2fx, Defense=%.2fx, Damage=%.2fx",
-            healthMultiplier, getMaxHealth(), 
+            "ShipStats: Health=%.1f (+%.1f), FireRate=%.2fx, Speed=%.2fx, Defense=%.2fx, Damage=%.2fx",
+            getMaxHearts(), healthUpgrade, 
             fireRateMultiplier, projectileSpeedMultiplier, defenseMultiplier, damageMultiplier
         );
     }
     
     // === VALORES BASE (GETTERS) ===
     
-    public static int getBaseMaxHealth() {
-        return BASE_MAX_HEALTH;
+    public static float getBaseMaxHearts() {
+        return BASE_MAX_HEARTS;
     }
     
     public static float getBaseDefenseMultiplier() {

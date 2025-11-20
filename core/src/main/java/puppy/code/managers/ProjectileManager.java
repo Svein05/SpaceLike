@@ -43,6 +43,12 @@ public class ProjectileManager {
         Projectile projectile = getPooledProjectile(type);
         if (projectile != null) {
             projectile.reset(x, y, velocityX, velocityY);
+            
+            if (type == ProjectileType.BULLET && nave != null) {
+                int bouncingLevel = nave.getShipStats().getBouncingBulletsLevel();
+                projectile.setRemainingBounces(bouncingLevel);
+            }
+            
             activeProjectiles.add(projectile);
             
             resourceManager.getSound(type.getSoundPath()).play();

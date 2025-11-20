@@ -218,7 +218,7 @@ public class MeteoriteEnemy extends Enemy {
         TextureRegion region = null;
 
         if (health <= 0) {
-            return;
+            region = asteroidAtlas.findRegion("Asteroid - Full Damage (Exploted)");
         } else if (percent > 0.66f) {
             region = asteroidAtlas.findRegion("Asteroid - No Damage");
         } else if (percent > 0.33f) {

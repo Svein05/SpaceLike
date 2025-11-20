@@ -84,6 +84,10 @@ public class CollisionSystem {
                 }
                 
                 if (projectile.getBounds().overlaps(enemy.getBounds())) {
+                    if (projectile.hasHitEnemy(enemy)) {
+                        continue;
+                    }
+                    
                     int baseDamage = projectile.getDamage();
                     int finalDamage = baseDamage;
                     
@@ -92,21 +96,8 @@ public class CollisionSystem {
                         finalDamage = Math.round(calculatedDamage);
                     }
                     
-                    int healthBefore = enemy.getHealth();
                     enemy.takeDamage(finalDamage);
-                    int healthAfter = enemy.getHealth();
-                    
-                    System.out.println("=== DAMAGE LOG ===");
-                    System.out.println("Enemy Type: " + enemy.getClass().getSimpleName());
-                    System.out.println("Health Before: " + healthBefore);
-                    System.out.println("Base Damage: " + baseDamage);
-                    System.out.println("Final Damage (with multiplier): " + finalDamage);
-                    System.out.println("Health After: " + healthAfter);
-                    if (nave != null && nave.getShipStats() != null) {
-                        System.out.println("Damage Multiplier: " + nave.getShipStats().getDamageMultiplier());
-                        System.out.println("Calculated Damage (float): " + nave.getShipStats().calculateDamage(baseDamage));
-                    }
-                    System.out.println("==================");
+                    projectile.addHitEnemy(enemy);
 
                     if (enemy.isDestroyed()) {
                         if (!(enemy instanceof puppy.code.entities.enemies.MeteoriteEnemy)) {
@@ -125,12 +116,64 @@ public class CollisionSystem {
                         }
                     }
                     
+                    if (projectile.getRemainingBounces() > 0) {
+                        Enemy nextTarget = findNearestEnemy(projectile, enemies);
+                        if (nextTarget != null) {
+                            float speed = (float) Math.sqrt(
+                                projectile.velocityX * projectile.velocityX + 
+                                projectile.velocityY * projectile.velocityY
+                            );
+                            float targetCenterX = nextTarget.getX() + nextTarget.getWidth() / 2;
+                            float targetCenterY = nextTarget.getY() + nextTarget.getHeight() / 2;
+                            
+                            projectile.redirectTo(targetCenterX, targetCenterY, speed);
+                            projectile.consumeBounce();
+                            
+                            if (projectile instanceof puppy.code.entities.projectiles.Bullet) {
+                                ((puppy.code.entities.projectiles.Bullet) projectile).setTargetEnemy(nextTarget);
+                            }
+                            break;
+                        }
+                    }
+                    
                     projectile.destroy();
                     projectileManager.removeProjectile(projectile);
                     break;
                 }
             }
         }
+    }
+    
+    private Enemy findNearestEnemy(Projectile projectile, ArrayList<Enemy> enemies) {
+        Enemy nearest = null;
+        float minDistance = Float.MAX_VALUE;
+        
+        float projCenterX = projectile.getX() + projectile.getWidth() / 2;
+        float projCenterY = projectile.getY() + projectile.getHeight() / 2;
+        
+        for (Enemy enemy : enemies) {
+            if (projectile.hasHitEnemy(enemy)) continue;
+            if (enemy.isDestroyed()) continue;
+            
+            if (enemy instanceof puppy.code.entities.enemies.MeteoriteEnemy) {
+                puppy.code.entities.enemies.MeteoriteEnemy asteroid = (puppy.code.entities.enemies.MeteoriteEnemy) enemy;
+                if (asteroid.isExploding()) continue;
+            }
+            
+            float enemyCenterX = enemy.getX() + enemy.getWidth() / 2;
+            float enemyCenterY = enemy.getY() + enemy.getHeight() / 2;
+            
+            float dx = enemyCenterX - projCenterX;
+            float dy = enemyCenterY - projCenterY;
+            float distance = dx * dx + dy * dy;
+            
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearest = enemy;
+            }
+        }
+        
+        return nearest;
     }
     
     public void checkShipEnemyCollisions(Nave nave, ArrayList<Enemy> enemies) {
@@ -150,9 +193,12 @@ public class CollisionSystem {
             Projectile projectile = projectiles.get(i);
             if (projectile.isDestroyed()) continue;
             
-            if (!(projectile instanceof puppy.code.entities.projectiles.EnemyBall)) continue;
+            boolean isEnemyProjectile = (projectile instanceof puppy.code.entities.projectiles.EnemyBall) || 
+                                        (projectile instanceof puppy.code.entities.projectiles.SniperProjectile);
+            if (!isEnemyProjectile) continue;
             
             if (projectile.getBounds().overlaps(nave.getBounds())) {
+                System.out.println("[COLLISION] Enemy projectile (" + projectile.getClass().getSimpleName() + ") hit player");
                 nave.takeDamage();
                 
                 projectile.destroy();

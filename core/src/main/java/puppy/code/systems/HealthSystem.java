@@ -20,7 +20,7 @@ public class HealthSystem {
     
     private HeartState[] hearts;
     private int maxHearts;
-    private float currentHealth;
+    private float currentHearts;
     private ShipStats shipStats;
     
     public HealthSystem(ShipStats shipStats) {
@@ -40,26 +40,23 @@ public class HealthSystem {
             throw new RuntimeException("No se pudieron cargar los sprites de corazones desde el atlas.");
         }
         
-        // Usar maxHealth de shipStats
-        int maxHealthPoints = shipStats.getMaxHealth();
-        maxHearts = (maxHealthPoints + 1) / 2;
+        float maxHeartsFloat = shipStats.getMaxHearts();
+        maxHearts = (int) Math.ceil(maxHeartsFloat);
         hearts = new HeartState[maxHearts];
-        currentHealth = maxHealthPoints;
+        currentHearts = maxHeartsFloat;
         
-        for (int i = 0; i < maxHearts; i++) {
-            hearts[i] = HeartState.FULL;
-        }
+        updateHeartStates();
     }
     
     public void takeDamage() {
-        takeDamage(1.0f);
+        takeDamage(0.5f);
     }
     
-    public void takeDamage(float baseDamage) {
-        if (currentHealth > 0) {
-            currentHealth -= 1.0f;
-            if (currentHealth < 0) {
-                currentHealth = 0;
+    public void takeDamage(float heartsLost) {
+        if (currentHearts > 0) {
+            currentHearts -= heartsLost;
+            if (currentHearts < 0) {
+                currentHearts = 0;
             }
             
             updateHeartStates();
@@ -68,11 +65,11 @@ public class HealthSystem {
     
     private void updateHeartStates() {
         for (int i = 0; i < maxHearts; i++) {
-            float heartHealth = currentHealth - (i * 2);
+            float heartValue = currentHearts - i;
             
-            if (heartHealth >= 2) {
+            if (heartValue >= 1.0f) {
                 hearts[i] = HeartState.FULL;
-            } else if (heartHealth >= 1) {
+            } else if (heartValue >= 0.5f) {
                 hearts[i] = HeartState.HALF;
             } else {
                 hearts[i] = HeartState.EMPTY;
@@ -106,33 +103,47 @@ public class HealthSystem {
     }
     
     public boolean isDead() {
-        return currentHealth <= 0;
+        return currentHearts <= 0;
     }
     
     public float getCurrentHealth() {
-        return currentHealth;
+        return currentHearts;
     }
     
     public int getVidas() {
-        return (int) Math.ceil(currentHealth / 2.0f);
+        return (int) Math.ceil(currentHearts);
     }
     
     public void setVidas(int vidas) {
-        currentHealth = vidas * 2;
+        currentHearts = vidas;
+        updateHeartStates();
+    }
+    
+    public void setCurrentHealth(float hearts) {
+        currentHearts = Math.min(hearts, shipStats.getMaxHearts());
+        if (currentHearts < 0) {
+            currentHearts = 0;
+        }
         updateHeartStates();
     }
     
     public void fullHeal() {
-        currentHealth = shipStats.getMaxHealth();
+        currentHearts = shipStats.getMaxHearts();
+        updateHeartStates();
+    }
+    
+    public void heal(int amount) {
+        float heartsToHeal = amount / 2.0f;
+        currentHearts = Math.min(currentHearts + heartsToHeal, shipStats.getMaxHearts());
         updateHeartStates();
     }
     
     public void refreshFromStats() {
-        int newMaxHealthPoints = shipStats.getMaxHealth();
-        int newMaxHearts = (newMaxHealthPoints + 1) / 2;
+        float newMaxHearts = shipStats.getMaxHearts();
+        int newMaxHeartsInt = (int) Math.ceil(newMaxHearts);
         
-        if (newMaxHearts != maxHearts) {
-            maxHearts = newMaxHearts;
+        if (newMaxHeartsInt != maxHearts) {
+            maxHearts = newMaxHeartsInt;
             HeartState[] newHearts = new HeartState[maxHearts];
             
             for (int i = 0; i < Math.min(hearts.length, newHearts.length); i++) {
@@ -140,15 +151,15 @@ public class HealthSystem {
             }
             
             for (int i = hearts.length; i < newHearts.length; i++) {
-                newHearts[i] = HeartState.FULL;
+                newHearts[i] = HeartState.EMPTY;
             }
             
             hearts = newHearts;
         }
         
-        float maxHealth = shipStats.getMaxHealth();
-        if (currentHealth > maxHealth) {
-            currentHealth = maxHealth;
+        float maxHeartsLimit = shipStats.getMaxHearts();
+        if (currentHearts > maxHeartsLimit) {
+            currentHearts = maxHeartsLimit;
         }
         
         updateHeartStates();

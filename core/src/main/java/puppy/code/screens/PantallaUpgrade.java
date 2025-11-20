@@ -83,6 +83,13 @@ public class PantallaUpgrade implements Screen {
     private void generateUpgradeOptions() {
         upgradeOptions = new ArrayList<>();
         
+        float optionWidth = 400;
+        float optionHeight = 200;
+        float spacing = 100;
+        float totalWidth = (optionWidth * 3) + (spacing * 2);
+        float startX = (1920 - totalWidth) / 2;
+        float y = 400;
+        
         UpgradeType[] allTypes = UpgradeType.values();
         List<UpgradeType> availableTypes = new ArrayList<>();
         for (UpgradeType type : allTypes) {
@@ -106,19 +113,12 @@ public class PantallaUpgrade implements Screen {
             availableTypes.add(type);
         }
         
-        float optionWidth = 400;
-        float optionHeight = 200;
-        float spacing = 100;
-        float totalWidth = (optionWidth * 3) + (spacing * 2);
-        float startX = (1920 - totalWidth) / 2;
-        float y = 400;
-        
         for (int i = 0; i < 3 && !availableTypes.isEmpty(); i++) {
             int randomIndex = random.nextInt(availableTypes.size());
             UpgradeType selectedType = availableTypes.remove(randomIndex);
             
             float x = startX + (i * (optionWidth + spacing));
-            UpgradeOption option = new UpgradeOption(selectedType, x, y, optionWidth, optionHeight);
+            UpgradeOption option = new UpgradeOption(selectedType, x, y, optionWidth, optionHeight, nave);
             upgradeOptions.add(option);
         }
     }

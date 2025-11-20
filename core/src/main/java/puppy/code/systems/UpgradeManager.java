@@ -11,12 +11,10 @@ public class UpgradeManager {
         
         switch (upgradeType) {
             case HEALTH:
-                stats.addHealthUpgrade(upgradeType.getValue());
+                float currentHearts = nave.getHealthSystem().getCurrentHealth();
+                stats.addHealthUpgrade(1.0f);
                 nave.getHealthSystem().refreshFromStats();
-                int heartIncrease = (int)(upgradeType.getValue() * ShipStats.getBaseMaxHealth());
-                nave.getHealthSystem().setVidas(
-                    nave.getHealthSystem().getVidas() + heartIncrease
-                );
+                nave.getHealthSystem().setCurrentHealth(currentHearts + 1.0f);
                 break;
                 
             case DAMAGE:
@@ -52,6 +50,10 @@ public class UpgradeManager {
                 if (nave.getSpinnerSystem() != null) {
                     nave.getSpinnerSystem().setDamageMultiplier(stats.getSpinnerDamageMultiplier());
                 }
+                break;
+                
+            case BOUNCING_BULLETS:
+                stats.addBouncingBulletsLevel();
                 break;
         }
     }

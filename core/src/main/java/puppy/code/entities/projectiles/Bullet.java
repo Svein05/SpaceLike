@@ -42,7 +42,9 @@ public class Bullet extends Projectile {
     public void update(float delta) {
         lifeTime += delta;
         
-        if (homingEnabled && homingPrecision > 0 && lifeTime >= TRACKING_DELAY && enemies != null) {
+        if (isBouncing && targetEnemy != null && !targetEnemy.isDestroyed()) {
+            applyHomingToBounce(targetEnemy, delta);
+        } else if (homingEnabled && homingPrecision > 0 && lifeTime >= TRACKING_DELAY && enemies != null) {
             if (targetEnemy == null || targetEnemy.isDestroyed()) {
                 targetEnemy = findClosestEnemy();
             }
@@ -64,6 +66,23 @@ public class Bullet extends Projectile {
         }
         if (y < -height || y > Gdx.graphics.getHeight() + height) {
             destroyed = true;
+        }
+    }
+    
+    private void applyHomingToBounce(Enemy target, float delta) {
+        float targetX = target.getX() + target.getWidth() / 2;
+        float targetY = target.getY() + target.getHeight() / 2;
+        float centerX = x + width / 2;
+        float centerY = y + height / 2;
+        
+        float dx = targetX - centerX;
+        float dy = targetY - centerY;
+        float distance = (float) Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 0) {
+            float currentSpeed = (float) Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+            velocityX = (dx / distance) * currentSpeed;
+            velocityY = (dy / distance) * currentSpeed;
         }
     }
     
@@ -151,5 +170,9 @@ public class Bullet extends Projectile {
     
     public void setEnemies(ArrayList<Enemy> enemies) {
         this.enemies = enemies;
+    }
+    
+    public void setTargetEnemy(Enemy target) {
+        this.targetEnemy = target;
     }
 }

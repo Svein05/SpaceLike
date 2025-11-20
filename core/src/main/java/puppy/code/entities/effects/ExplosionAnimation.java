@@ -32,10 +32,11 @@ public class ExplosionAnimation {
     private void loadExplosionFrames() {
         try {
             TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("Game/Enemys/Asteroids/Asteroid.atlas"));
-            explosionFrames = new TextureRegion[3];
-            explosionFrames[0] = atlas.findRegion("Asteroid - Exploted 1");
-            explosionFrames[1] = atlas.findRegion("Asteroid - Exploted 2");
-            explosionFrames[2] = atlas.findRegion("Asteroid - Exploted Final");
+            explosionFrames = new TextureRegion[4];
+            explosionFrames[0] = atlas.findRegion("Asteroid - Full Damage (Exploted)");
+            explosionFrames[1] = atlas.findRegion("Asteroid - Exploted 1");
+            explosionFrames[2] = atlas.findRegion("Asteroid - Exploted 2");
+            explosionFrames[3] = atlas.findRegion("Asteroid - Exploted Final");
         } catch (Exception e) {
             System.err.println("Error cargando atlas de explosion: " + e.getMessage());
             finished = true;
