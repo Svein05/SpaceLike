@@ -1,0 +1,152 @@
+================================================================================
+                            SPACELIKE - TODO LIST
+================================================================================
+
+PRIORIDAD ALTA
+--------------------------------------------------------------------------------
+[ ] Cambiar sprite temporal azul de BonusHeal por sprite final
+[ ] Balancear consumo de turbo (actualmente 33.75, probar valores)
+[ ] Revisar spawn rate de enemigos en rondas avanzadas
+
+UPGRADES PENDIENTES
+--------------------------------------------------------------------------------
+[ ] Escudo Temporal - Absorbe X hits antes de romperse (cooldown despues)
+[ ] Velocidad de Movimiento - Aumenta velocidad de la nave en 15%
+[ ] Disparo Penetrante - Las balas atraviesan multiples enemigos
+[ ] Recarga Rapida de Turbo - Reduce tiempo de regeneracion del turbo
+[ ] Proyectiles Explosivos - Las balas explotan al impactar (area de dano)
+[ ] Vida por Kill - Recupera 0.5 corazones cada X enemigos eliminados
+[ ] Magnetismo XP - Atrae experiencia desde mayor distancia
+
+BONUS PENDIENTES
+--------------------------------------------------------------------------------
+[ ] Bonus Slow-Motion - Ralentiza el juego un 50% por 8 segundos
+[ ] Bonus Nuke - Elimina todos los enemigos en pantalla
+[ ] Bonus Invencibilidad - 5 segundos de invulnerabilidad total
+[ ] Bonus Double XP - Experiencia x2 por 15 segundos
+[ ] Bonus Rapid Fire - Cadencia x3 por 8 segundos
+[ ] Bonus Freeze - Congela enemigos en pantalla por 4 segundos
+
+ENEMIGOS PENDIENTES
+--------------------------------------------------------------------------------
+[ ] Tank Enemy - Muy lento, mucha vida, disparo pesado
+[ ] Splitter Enemy - Al morir se divide en 2 enemigos mas pequenos
+[ ] Shield Enemy - Tiene escudo frontal que bloquea balas
+[ ] Kamikaze Enemy - Se lanza directo a la nave al detectarla
+[ ] Healer Enemy - Cura a enemigos cercanos, prioridad de eliminacion
+[ ] Teleporter Enemy - Se teletransporta cada X segundos
+[ ] Spawner Enemy - Genera mini-enemigos periodicamente
+
+BOSS FINAL
+--------------------------------------------------------------------------------
+Concepto: Nave nodriza masiva con multiples fases
+
+Fase 1 - Barrera de Torretas
+  - Boss estacionario en la parte superior
+  - 6 torretas laterales que deben destruirse primero
+  - Torretas disparan en patron radial
+  - Al destruir todas las torretas, pasa a Fase 2
+
+Fase 2 - Nucleo Expuesto
+  - Se abre el nucleo central (punto debil)
+  - Boss empieza a moverse lateralmente
+  - Dispara laser continuo que barre la pantalla
+  - Spawns oleadas de enemigos pequenos
+  - Al recibir 50% de dano, pasa a Fase 3
+
+Fase 3 - Modo Berserk
+  - Velocidad de movimiento aumenta drasticamente
+  - Dispara proyectiles en todas direcciones (patron bullet-hell)
+  - Cada 10 segundos lanza ataque especial (elige random):
+    * Laser gigante que requiere esquivar
+    * Spawn de 3 Charger Enemies
+    * Lluvia de proyectiles desde arriba
+  - Al ser derrotado, explosion masiva con recompensa de XP grande
+
+MEJORAS VISUALES
+--------------------------------------------------------------------------------
+[ ] Particulas de explosion mas detalladas para enemigos
+[ ] Efecto de trail para proyectiles del jugador
+[ ] Animacion de recogida de bonus (efecto de brillo)
+[ ] Feedback visual al recibir dano (screen shake + flash rojo)
+[ ] Barra de vida para enemigos con mucha salud (Boss, Tank)
+
+MEJORAS DE UI
+--------------------------------------------------------------------------------
+[ ] Contador de kills en pantalla
+[ ] Indicador de combo (kills consecutivos)
+[ ] Minimapa para enemigos fuera de pantalla
+[ ] Notificacion al recoger bonus (tooltip con nombre)
+[ ] Efecto de level-up mas llamativo
+
+AUDIO (PENDIENTE)
+--------------------------------------------------------------------------------
+[ ] SFX para recoger bonus
+[ ] SFX para curacion
+[ ] SFX para turbo activado/desactivado
+[ ] SFX diferente por tipo de enemigo eliminado
+[ ] Musica diferente para pantalla de upgrades
+[ ] Musica epica para boss fight
+
+BALANCEO
+--------------------------------------------------------------------------------
+[ ] Revisar dano de enemigos en rondas 5+
+[ ] Ajustar probabilidad de spawn de cada tipo de bonus
+[ ] Balancear costo/beneficio de upgrades
+[ ] Testear dificultad con todos los upgrades combinados
+
+ERRORES CONOCIDOS
+--------------------------------------------------------------------------------
+[ ] Ninguno actualmente
+
+================================================================================
+                        SINTAXIS TODO TREE (VS CODE)
+================================================================================
+
+MARCADORES BASICOS:
+  TODO:     - Tarea pendiente general
+  FIXME:    - Bug o problema que necesita solucion
+  HACK:     - Solucion temporal/sucia que debe mejorarse
+  BUG:      - Error conocido
+  NOTE:     - Nota importante o recordatorio
+  XXX:      - Advertencia o algo que requiere atencion
+
+PRIORIDAD:
+  !         - Prioridad alta (ejemplo: TODO! Arreglar esto urgente)
+  !!        - Prioridad critica
+  ?         - Prioridad baja o cuestionable
+
+ESTADOS:
+  [ ]       - Pendiente
+  [x]       - Completado
+  [-]       - Cancelado
+  [>]       - En progreso
+
+ETIQUETAS:
+  @tag      - Etiquetas personalizadas (ejemplo: @bug @performance)
+  #123      - Referencias a issues
+  (nombre)  - Asignar a persona
+
+FECHAS:
+  YYYY-MM-DD - Formato de fecha
+
+EJEMPLOS DE USO EN CODIGO:
+  // TODO: Implementar sistema de particulas
+  // FIXME: Memory leak en BonusManager
+  // TODO! Urgente: Balancear vida del boss
+  // HACK: Solucion temporal, refactorizar despues
+  // NOTE: Este valor debe ser siempre par
+  // TODO: @performance Optimizar loop principal
+  // BUG: #42 Colisiones no detectan correctamente
+  // TODO: (elias) Revisar sprites finales
+
+CONFIGURACION EN settings.json:
+  "todo-tree.general.tags": [
+    "TODO",
+    "FIXME",
+    "HACK",
+    "BUG",
+    "NOTE",
+    "XXX"
+  ]
+
