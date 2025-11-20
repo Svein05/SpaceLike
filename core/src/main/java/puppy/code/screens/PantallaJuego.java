@@ -30,6 +30,8 @@ public class PantallaJuego implements Screen {
     private SpriteBatch batch;
     private Sound explosionSound;
     private Music gameMusic;
+    private Music currentTrack;
+    private String currentMusicPath;
     private int ronda;
     private int velXAsteroides; 
     private int velYAsteroides; 
@@ -126,11 +128,9 @@ public class PantallaJuego implements Screen {
         
         explosionSound = Gdx.audio.newSound(Gdx.files.internal("explosion.ogg"));
         explosionSound.setVolume(1, 0.5f);
-        gameMusic = Gdx.audio.newMusic(Gdx.files.internal("piano-loops.wav"));
         
-        gameMusic.setLooping(true);
-        gameMusic.setVolume(0.5f);
-        gameMusic.play();
+        // Inicializar música según la ronda
+        initializeMusic();
 
         int inicialX = (naveX >= 0) ? (int)naveX : Gdx.graphics.getWidth() / 2 - 50;
         int inicialY = (naveY >= 0) ? (int)naveY : 30;
@@ -294,8 +294,18 @@ public class PantallaJuego implements Screen {
             float currentNaveX = nave.getX();
             float currentNaveY = nave.getY();
             
+            // Verificar si necesitamos cambiar la música para la próxima ronda
+            int nextRound = ronda + 1;
+            String nextMusicPath = getMusicPathForRound(nextRound);
+            if (!nextMusicPath.equals(currentMusicPath)) {
+                // Parar la música actual antes de crear la nueva pantalla
+                if (gameMusic != null) {
+                    gameMusic.stop();
+                }
+            }
+            
             shouldDisposeParallax = false;
-            Screen ss = new PantallaJuego(game, ronda + 1, nave.getVidas(), currentScore, 
+            Screen ss = new PantallaJuego(game, nextRound, nave.getVidas(), currentScore, 
                     velXAsteroides + 3, velYAsteroides + 3, cantAsteroides + 10, xpSystem, parallaxBackground,
                     currentNaveX, currentNaveY, nave);
             ss.resize(1920, 1080);
@@ -306,7 +316,9 @@ public class PantallaJuego implements Screen {
     
     @Override
     public void show() {
-        gameMusic.play();
+        if (gameMusic != null && !gameMusic.isPlaying()) {
+            gameMusic.play();
+        }
     }
 
     @Override
@@ -349,7 +361,12 @@ public class PantallaJuego implements Screen {
     @Override
     public void dispose() {
         this.explosionSound.dispose();
-        this.gameMusic.dispose();
+        if (this.gameMusic != null) {
+            this.gameMusic.dispose();
+        }
+        if (this.currentTrack != null && this.currentTrack != this.gameMusic) {
+            this.currentTrack.dispose();
+        }
         
         if (parallaxBackground != null && shouldDisposeParallax) {
             parallaxBackground.dispose();
@@ -373,6 +390,74 @@ public class PantallaJuego implements Screen {
         
         if (tutorialSystem != null) {
             tutorialSystem.dispose();
+        }
+    }
+    
+    /**
+     * Inicializa la música según la ronda actual
+     */
+    private void initializeMusic() {
+        String musicPath = getMusicPathForRound(ronda);
+        currentMusicPath = musicPath;
+        
+        try {
+            gameMusic = Gdx.audio.newMusic(Gdx.files.internal(musicPath));
+            currentTrack = gameMusic;
+            
+            gameMusic.setLooping(true);
+            gameMusic.setVolume(0.5f);
+            gameMusic.play();
+        } catch (Exception e) {
+            System.out.println("Error cargando música: " + musicPath + " - " + e.getMessage());
+            gameMusic = null;
+            currentTrack = null;
+        }
+    }
+    
+    /**
+     * Obtiene la ruta de la música según la ronda
+     * Rondas 1-4: Audio/Music/NombreProyecto - 1 chill.mp3 (música chill)
+     * Rondas 5-8: Audio/Music/NombreProyecto - 2 medio.mp3 (música medio)
+     * Rondas 9+: Audio/Music/NombreProyecto - 3 epic.mp3 (música épica)
+     */
+    private String getMusicPathForRound(int round) {
+        if (round >= 1 && round <= 4) {
+            return "Audio/Music/NombreProyecto - 1 chill.mp3";
+        } else if (round >= 5 && round <= 8) {
+            return "Audio/Music/NombreProyecto - 2 medio.mp3";
+        } else {
+            return "Audio/Music/NombreProyecto - 3 epic.mp3";
+        }
+    }
+    
+    /**
+     * Cambia la música si es necesario según la ronda actual
+     */
+    private void updateMusicForRound() {
+        String newMusicPath = getMusicPathForRound(ronda);
+        
+        // Solo cambiar si la música es diferente
+        if (!newMusicPath.equals(currentMusicPath)) {
+            // Detener música actual
+            if (gameMusic != null) {
+                gameMusic.stop();
+                gameMusic.dispose();
+            }
+            
+            // Cargar nueva música
+            try {
+                currentMusicPath = newMusicPath;
+                gameMusic = Gdx.audio.newMusic(Gdx.files.internal(newMusicPath));
+                currentTrack = gameMusic;
+                
+                gameMusic.setLooping(true);
+                gameMusic.setVolume(0.5f);
+                gameMusic.play();
+            } catch (Exception e) {
+                System.out.println("Error cambiando música a: " + newMusicPath + " - " + e.getMessage());
+                gameMusic = null;
+                currentTrack = null;
+            }
         }
     }
     

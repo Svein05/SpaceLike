@@ -85,7 +85,14 @@ public class ResourceManager {
         getSound("pop-sound.mp3");
         getSound("explosion.ogg");
         
-        getMusic("piano-loops.wav");
+        // Pistas de música dinámicas
+        try {
+            getMusic("Audio/Music/NombreProyecto - 1 chill.mp3");
+            getMusic("Audio/Music/NombreProyecto - 2 medio.mp3");
+            getMusic("Audio/Music/NombreProyecto - 3 epic.mp3");
+        } catch (Exception e) {
+            System.out.println("Error precargando pistas de música: " + e.getMessage());
+        }
         
         getDefaultFont();
     }
