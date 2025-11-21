@@ -10,15 +10,15 @@ import puppy.code.interfaces.EnemyWeapon;
 import puppy.code.interfaces.MovementBehavior;
 import puppy.code.managers.ResourceManager;
 
+// Patron: Concrete Factory (Abstract Factory)
 public class SniperEnemyFactory extends EnemyFactory {
-    private Nave playerShip;
-    
-    public SniperEnemyFactory(Nave playerShip) {
-        this.playerShip = playerShip;
-    }
     
     @Override
-    protected Enemy createEnemy(float x, float y, float velocityX, float velocityY, int round) {
+    protected Enemy createEnemy(float x, float y, float velocityX, float velocityY, int round, Nave playerShip) {
+        if (playerShip == null) {
+            throw new IllegalStateException("PlayerShip no configurado en SniperEnemyFactory");
+        }
+        
         Texture texture = ResourceManager.getInstance().getTexture("Game/Enemys/EnemyShips/Sniper.png");
         int health = 10 + (round * 3);
         return new SniperEnemy(x, y, texture, health, Math.abs(velocityY), playerShip);

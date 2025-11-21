@@ -10,16 +10,18 @@ import puppy.code.interfaces.MovementBehavior;
 import puppy.code.interfaces.EnemyWeapon;
 import puppy.code.managers.ResourceManager;
 
+// Patron: Concrete Factory (Abstract Factory)
 public class ChargerEnemyFactory extends EnemyFactory {
     
-    private Nave playerShip;
-    
-    public ChargerEnemyFactory(Nave playerShip) {
-        this.playerShip = playerShip;
+    public ChargerEnemyFactory() {
     }
     
     @Override
-    protected Enemy createEnemy(float x, float y, float velocityX, float velocityY, int round) {
+    protected Enemy createEnemy(float x, float y, float velocityX, float velocityY, int round, Nave playerShip) {
+        if (playerShip == null) {
+            throw new IllegalStateException("PlayerShip no configurado en ChargerEnemyFactory");
+        }
+        
         Texture texture = ResourceManager.getInstance().getTexture("Game/Enemys/EnemyShips/Charger.png");
         int health = 15 + (round * 2);
         

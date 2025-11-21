@@ -4,6 +4,7 @@ import puppy.code.entities.enemies.Enemy;
 import puppy.code.entities.enemies.SniperEnemy;
 import puppy.code.interfaces.MovementBehavior;
 
+// Patron: Strategy (Concrete Strategy)
 public class SniperMovement implements MovementBehavior {
     private float baseVelocityY;
     private float zigzagFrequency;

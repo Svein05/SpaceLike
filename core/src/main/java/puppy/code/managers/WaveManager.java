@@ -9,20 +9,18 @@ public class WaveManager {
     private final EnemySpawner enemySpawner;
     private int currentRound;
     private boolean waveActive;
-    private Nave playerShip;
     
     public WaveManager(Nave playerShip) {
         this.enemySpawner = new EnemySpawner();
         this.currentRound = 1;
         this.waveActive = false;
-        this.playerShip = playerShip;
+        
+        enemySpawner.setPlayerShip(playerShip);
     }
     
     public ArrayList<Enemy> startWave(int round) {
         this.currentRound = round;
         this.waveActive = true;
-        
-        enemySpawner.registerChargerFactory(playerShip);
         
         WaveConfiguration config = getWaveConfiguration(round);
         ArrayList<Enemy> waveEnemies = new ArrayList<>();

@@ -3,6 +3,7 @@ package puppy.code.entities.enemies.behaviors;
 import puppy.code.entities.enemies.Enemy;
 import puppy.code.interfaces.MovementBehavior;
 
+// Patron: Strategy (Concrete Strategy)
 public class ZigZagMovement implements MovementBehavior {
     private float baseVelocityY;
     private float zigzagFrequency;

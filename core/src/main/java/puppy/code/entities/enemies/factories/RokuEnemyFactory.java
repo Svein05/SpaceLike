@@ -9,10 +9,11 @@ import puppy.code.interfaces.EnemyWeapon;
 import puppy.code.interfaces.MovementBehavior;
 import puppy.code.managers.ResourceManager;
 
+// Patron: Concrete Factory (Abstract Factory)
 public class RokuEnemyFactory extends EnemyFactory {
     
     @Override
-    protected Enemy createEnemy(float x, float y, float velocityX, float velocityY, int round) {
+    protected Enemy createEnemy(float x, float y, float velocityX, float velocityY, int round, puppy.code.entities.Nave playerShip) {
         Texture texture = ResourceManager.getInstance().getTexture("Game/Enemys/EnemyShips/Roku.png");
         int health = 10 + (round * 3);
         return new RokuEnemy(x, y, texture, health, Math.abs(velocityY));

@@ -1,7 +1,8 @@
 package puppy.code.managers;
 
+// Patron: Singleton (Thread-Safe con Double-Checked Locking)
 public class GameStateManager {
-    private static GameStateManager instance;
+    private static volatile GameStateManager instance;
     
     private int score;
     private int lives;
@@ -20,7 +21,11 @@ public class GameStateManager {
     
     public static GameStateManager getInstance() {
         if (instance == null) {
-            instance = new GameStateManager();
+            synchronized (GameStateManager.class) {
+                if (instance == null) {
+                    instance = new GameStateManager();
+                }
+            }
         }
         return instance;
     }

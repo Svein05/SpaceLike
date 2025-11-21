@@ -7,10 +7,11 @@ import puppy.code.entities.enemies.weapons.NoWeapon;
 import puppy.code.interfaces.EnemyWeapon;
 import puppy.code.interfaces.MovementBehavior;
 
+// Patron: Concrete Factory (Abstract Factory)
 public class MeteoriteEnemyFactory extends EnemyFactory {
     
     @Override
-    protected Enemy createEnemy(float x, float y, float velocityX, float velocityY, int round) {
+    protected Enemy createEnemy(float x, float y, float velocityX, float velocityY, int round, puppy.code.entities.Nave playerShip) {
         return new MeteoriteEnemy((int)x, (int)y, 20, (int)velocityX, (int)velocityY, round);
     }
 

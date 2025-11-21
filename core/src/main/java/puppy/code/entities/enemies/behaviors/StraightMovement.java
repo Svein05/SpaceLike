@@ -3,6 +3,7 @@ package puppy.code.entities.enemies.behaviors;
 import puppy.code.entities.enemies.Enemy;
 import puppy.code.interfaces.MovementBehavior;
 
+// Patron: Strategy (Concrete Strategy)
 public class StraightMovement implements MovementBehavior {
     private float velocityX;
     private float velocityY;

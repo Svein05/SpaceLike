@@ -15,6 +15,7 @@ import puppy.code.entities.enemies.factories.ChargerEnemyFactory;
 public class EnemySpawner {
     private Random random;
     private Map<EnemyType, EnemyFactory> factories;
+    private Nave playerShip;
     
     public EnemySpawner() {
         this.random = new Random();
@@ -26,6 +27,7 @@ public class EnemySpawner {
     private void initializeFactories() {
         factories.put(EnemyType.METEORITE, new MeteoriteEnemyFactory());
         factories.put(EnemyType.ROKU, new RokuEnemyFactory());
+        factories.put(EnemyType.CHARGER, new ChargerEnemyFactory());
     }
     
     public Enemy spawnEnemy(EnemyType type, float x, float y, float velocityX, float velocityY) {
@@ -36,7 +38,7 @@ public class EnemySpawner {
         EnemyFactory factory = factories.get(type);
         
         if (factory != null) {
-            return factory.createCompleteEnemy(x, y, velocityX, velocityY, round);
+            return factory.createCompleteEnemy(x, y, velocityX, velocityY, round, playerShip);
         }
         
         return new MeteoriteEnemy((int)x, (int)y, (int)type.getSize(), 
@@ -78,9 +80,7 @@ public class EnemySpawner {
         return factories.get(type);
     }
     
-    public void registerChargerFactory(Nave playerShip) {
-        if (!factories.containsKey(EnemyType.CHARGER)) {
-            factories.put(EnemyType.CHARGER, new ChargerEnemyFactory(playerShip));
-        }
+    public void setPlayerShip(Nave playerShip) {
+        this.playerShip = playerShip;
     }
 }

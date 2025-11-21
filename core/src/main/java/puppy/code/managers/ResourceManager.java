@@ -10,8 +10,9 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 
+// Patron: Singleton (Thread-Safe con Double-Checked Locking)
 public class ResourceManager {
-    private static ResourceManager instance;
+    private static volatile ResourceManager instance;
     
     private Map<String, Texture> textures;
     private Map<String, Sound> sounds;
@@ -29,7 +30,11 @@ public class ResourceManager {
     
     public static ResourceManager getInstance() {
         if (instance == null) {
-            instance = new ResourceManager();
+            synchronized (ResourceManager.class) {
+                if (instance == null) {
+                    instance = new ResourceManager();
+                }
+            }
         }
         return instance;
     }

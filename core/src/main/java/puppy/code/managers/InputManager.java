@@ -3,8 +3,9 @@ package puppy.code.managers;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 
+// Patron: Singleton (Thread-Safe con Double-Checked Locking)
 public class InputManager {
-    private static InputManager instance;
+    private static volatile InputManager instance;
     
     private boolean previousLeftPressed = false;
     private boolean previousRightPressed = false;
@@ -18,7 +19,11 @@ public class InputManager {
     
     public static InputManager getInstance() {
         if (instance == null) {
-            instance = new InputManager();
+            synchronized (InputManager.class) {
+                if (instance == null) {
+                    instance = new InputManager();
+                }
+            }
         }
         return instance;
     }
