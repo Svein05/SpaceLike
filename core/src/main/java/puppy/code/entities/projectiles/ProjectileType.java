@@ -2,7 +2,7 @@ package puppy.code.entities.projectiles;
 
 public enum ProjectileType {
     BULLET("Rocket2.png", 10, 300, 5, 0.5f, "Audio/SFX/Weapons/Shoot19-_6_.mp3"),
-    ENEMY_BALL("", 16, 300, 1, 1.0f, "pop-sound.mp3");  // Mantener pop-sound para enemigos
+    ENEMY_BALL("", 16, 300, 1, 1.0f, "pop-sound.mp3");
     
     private final String texturePath;
     private final float width;

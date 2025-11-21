@@ -55,12 +55,11 @@ public class ProjectileManager {
             
             activeProjectiles.add(projectile);
             
-            // Reproducir sonido con volumen fijo para evitar amplificación
             if (playSound) {
                 if (type == ProjectileType.BULLET) {
-                    resourceManager.getSound(type.getSoundPath()).play(0.3f); // Volumen constante para disparo del jugador
+                    resourceManager.getSound(type.getSoundPath()).play(0.3f);
                 } else {
-                    resourceManager.getSound(type.getSoundPath()).play(0.5f); // Volumen para disparos enemigos
+                    resourceManager.getSound(type.getSoundPath()).play(0.5f);
                 }
             }
         }

@@ -3,6 +3,7 @@ package puppy.code.systems;
 import java.util.ArrayList;
 
 import puppy.code.entities.Nave;
+import puppy.code.entities.enemies.BossEnemy;
 import puppy.code.entities.enemies.MeteoriteEnemy;
 import puppy.code.entities.enemies.Enemy;
 import puppy.code.entities.projectiles.Projectile;
@@ -41,13 +42,14 @@ public class CollisionSystem {
                 if (projectile.getBounds().overlaps(enemy.getBounds())) {
                     enemy.takeDamage(projectile.getDamage());
                     
-                    if (enemy.isDestroyed()) {
-                        gameState.addScore(enemy.getScoreValue());
-                        xpSystem.addXP(enemy.getXPValue());
-                        
-                        enemies1.remove(j);
-                        enemies2.remove(j);
-                    }
+                        if (enemy.isDestroyed()) {
+                            gameState.addScore(enemy.getScoreValue());
+                            int xpVal = enemy.getXPValue();
+                            xpSystem.addXP(xpVal);
+
+                            enemies1.remove(j);
+                            enemies2.remove(j);
+                        }
 
                     projectile.destroy();
                     projectileManager.removeProjectile(projectile);
@@ -100,20 +102,20 @@ public class CollisionSystem {
                     projectile.addHitEnemy(enemy);
 
                     if (enemy.isDestroyed()) {
-                        if (!(enemy instanceof puppy.code.entities.enemies.MeteoriteEnemy)) {
-                            try {
-                                resourceManager.getSound(enemy.getDestructionSound()).play();
-                            } catch (Exception e) {
-                            }
-                        }
-    
-                        int scoreAdded = enemy.getScoreValue();
-                        gameState.addScore(scoreAdded);
-                        
-                        if (xpSystem != null) {
-                            int xpAdded = enemy.getXPValue();
-                            xpSystem.addXP(xpAdded);
-                        }
+                                    if (!(enemy instanceof puppy.code.entities.enemies.MeteoriteEnemy)) {
+                                        try {
+                                            resourceManager.getSound(enemy.getDestructionSound()).play();
+                                        } catch (Exception e) {
+                                        }
+                                    }
+
+                                    int scoreAdded = enemy.getScoreValue();
+                                    gameState.addScore(scoreAdded);
+
+                                    if (xpSystem != null) {
+                                        int xpAdded = enemy.getXPValue();
+                                        xpSystem.addXP(xpAdded);
+                                    }
                     }
                     
                     if (projectile.getRemainingBounces() > 0) {
@@ -187,7 +189,7 @@ public class CollisionSystem {
     }
     
     public void checkEnemyProjectileShipCollisions(ArrayList<Projectile> projectiles, Nave nave, ProjectileManager projectileManager) {
-        if (nave.estaHerido()) return;
+        if (nave.estaHerido() || nave.isInvincible()) return;
         
         for (int i = projectiles.size() - 1; i >= 0; i--) {
             Projectile projectile = projectiles.get(i);
@@ -198,7 +200,6 @@ public class CollisionSystem {
             if (!isEnemyProjectile) continue;
             
             if (projectile.getBounds().overlaps(nave.getBounds())) {
-                System.out.println("[COLLISION] Enemy projectile (" + projectile.getClass().getSimpleName() + ") hit player");
                 nave.takeDamage();
                 
                 projectile.destroy();
@@ -258,6 +259,34 @@ public class CollisionSystem {
                 if (!(projectile instanceof puppy.code.entities.projectiles.EnemyBall)) continue;
                 
                 if (spinner.getBounds().overlaps(projectile.getBounds())) {
+                    projectile.destroy();
+                    projectileManager.removeProjectile(projectile);
+                    break;
+                }
+            }
+        }
+    }
+    
+    public void checkProjectileBossCollisions(ArrayList<Projectile> projectiles, BossEnemy boss, ProjectileManager projectileManager) {
+        if (boss == null || boss.isDestroyed()) return;
+        
+        for (int i = projectiles.size() - 1; i >= 0; i--) {
+            Projectile projectile = projectiles.get(i);
+            if (projectile.isDestroyed()) continue;
+            
+            if (projectile instanceof puppy.code.entities.projectiles.EnemyBall) continue;
+            
+            if (projectile.getBounds().overlaps(boss.getBounds())) {
+                if (projectile.getAge() >= 1.0f) {
+                    int baseDamage = projectile.getDamage();
+                    int finalDamage = baseDamage;
+                    
+                    if (nave != null && nave.getShipStats() != null) {
+                        float calculatedDamage = nave.getShipStats().calculateDamage(baseDamage);
+                        finalDamage = Math.round(calculatedDamage);
+                    }
+                    
+                    boss.takeDamage(finalDamage);
                     projectile.destroy();
                     projectileManager.removeProjectile(projectile);
                     break;

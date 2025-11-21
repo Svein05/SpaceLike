@@ -2,6 +2,7 @@ package puppy.code.screens;
 
 import puppy.code.SpaceNavigation;
 import puppy.code.entities.Nave;
+import puppy.code.entities.enemies.BossEnemy;
 import puppy.code.graphics.ParallaxBackground;
 import puppy.code.stats.UpgradeOption;
 import puppy.code.stats.UpgradeType;
@@ -38,6 +39,8 @@ public class PantallaUpgrade implements Screen {
     private ParallaxBackground parallaxBackground;
     private XPSystem xpSystem;
     private LevelSystem levelSystem;
+    private PantallaJuego originScreen;
+    private Screen originScreenGeneric;
     
     private int ronda;
     private int score;
@@ -47,12 +50,13 @@ public class PantallaUpgrade implements Screen {
     private float naveX;
     private float naveY;
     private puppy.code.managers.BonusManager bonusManager;
+    private BossEnemy boss;
     
     public PantallaUpgrade(SpaceNavigation game, PantallaJuego pantallaJuego, 
                           Nave nave, ParallaxBackground parallax, XPSystem xpSystem,
                           LevelSystem levelSystem, int ronda, int score, 
                           int velXAsteroides, int velYAsteroides, int cantAsteroides,
-                          puppy.code.managers.BonusManager bonusManager) {
+                          puppy.code.managers.BonusManager bonusManager, BossEnemy boss) {
         this.game = game;
         this.nave = nave;
         this.parallaxBackground = parallax;
@@ -64,8 +68,45 @@ public class PantallaUpgrade implements Screen {
         this.velYAsteroides = velYAsteroides;
         this.cantAsteroides = cantAsteroides;
         this.bonusManager = bonusManager;
+        this.boss = boss;
         this.naveX = nave.getX();
         this.naveY = nave.getY();
+        this.originScreen = pantallaJuego;
+        this.originScreenGeneric = pantallaJuego;
+        
+        xpSystem.consumeLevelUp();
+        
+        batch = game.getBatch();
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, 1920, 1080);
+        viewport = new FitViewport(1920, 1080, camera);
+        
+        shapeRenderer = new ShapeRenderer();
+        random = new Random();
+        
+        generateUpgradeOptions();
+    }
+    
+    public PantallaUpgrade(SpaceNavigation game, PantallaBoss pantallaBoss,
+                          Nave nave, ParallaxBackground parallax, XPSystem xpSystem,
+                          LevelSystem levelSystem, int ronda, int score,
+                          puppy.code.managers.BonusManager bonusManager, BossEnemy boss) {
+        this.game = game;
+        this.nave = nave;
+        this.parallaxBackground = parallax;
+        this.xpSystem = xpSystem;
+        this.levelSystem = levelSystem;
+        this.ronda = ronda;
+        this.score = score;
+        this.velXAsteroides = 0;
+        this.velYAsteroides = 0;
+        this.cantAsteroides = 0;
+        this.bonusManager = bonusManager;
+        this.boss = boss;
+        this.naveX = nave.getX();
+        this.naveY = nave.getY();
+        this.originScreen = null;
+        this.originScreenGeneric = pantallaBoss;
         
         xpSystem.consumeLevelUp();
         
@@ -190,9 +231,29 @@ public class PantallaUpgrade implements Screen {
         
         levelSystem.levelUpScreenShown();
         
+        if (originScreenGeneric != null) {
+            if (originScreenGeneric instanceof PantallaJuego) {
+                ((PantallaJuego) originScreenGeneric).onReturnFromUpgrade();
+                if (game.getScreen() == this) {
+                    game.setScreen(originScreenGeneric);
+                }
+                return;
+            } else if (originScreenGeneric instanceof PantallaBoss) {
+                ((PantallaBoss) originScreenGeneric).onReturnFromUpgrade();
+                game.setScreen(originScreenGeneric);
+                return;
+            }
+        }
+        
+        if (originScreen != null) {
+            originScreen.onReturnFromUpgrade();
+            game.setScreen(originScreen);
+            return;
+        }
+
         Screen ss = new PantallaJuego(game, ronda, nave.getVidas(), score,
                                      velXAsteroides, velYAsteroides, cantAsteroides,
-                                     xpSystem, parallaxBackground, naveX, naveY, nave, bonusManager);
+                                     xpSystem, parallaxBackground, naveX, naveY, nave, bonusManager, boss);
         ss.resize(1920, 1080);
         game.setScreen(ss);
     }

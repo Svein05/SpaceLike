@@ -14,6 +14,7 @@ public abstract class Projectile extends GameObject {
     protected float baseSpeed;
     protected boolean speedBoosted;
     protected boolean damageReduced;
+    protected float age;
     
     public Projectile(float x, float y, float width, float height, float velocityX, float velocityY, int damage) {
         super(x, y, width, height);
@@ -28,10 +29,12 @@ public abstract class Projectile extends GameObject {
         this.baseSpeed = (float) Math.sqrt(velocityX * velocityX + velocityY * velocityY);
         this.speedBoosted = false;
         this.damageReduced = false;
+        this.age = 0f;
     }
     
     public boolean isDestroyed() { return destroyed; }
     public int getDamage() { return damage; }
+    public float getAge() { return age; }
     public void destroy() { destroyed = true; }
     
     public int getRemainingBounces() { return remainingBounces; }
@@ -83,5 +86,6 @@ public abstract class Projectile extends GameObject {
         this.speedBoosted = false;
         this.damage = baseDamage;
         this.damageReduced = false;
+        this.age = 0f;
     }
 }

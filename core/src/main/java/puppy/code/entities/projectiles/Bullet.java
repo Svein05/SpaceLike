@@ -40,6 +40,7 @@ public class Bullet extends Projectile {
     
     @Override
     public void update(float delta) {
+        age += delta;
         lifeTime += delta;
         
         if (isBouncing && targetEnemy != null && !targetEnemy.isDestroyed()) {

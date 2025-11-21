@@ -98,7 +98,7 @@ public class PantallaGameOver implements Screen {
 		String restartText = "Presiona ENTER para reiniciar...";
 		layout.setText(game.getFont(), restartText);
 		float restartX = (1920 - layout.width) / 2;
-		float restartY = 200; // Parte inferior de la pantalla
+		float restartY = 200;
 		
 		game.getFont().setColor(0, 0, 0, textAlpha * 0.6f);
 		game.getFont().draw(game.getBatch(), restartText, restartX + 2, restartY - 2);

@@ -18,6 +18,7 @@ public class EnemyBall extends Projectile {
 
     @Override
     public void update(float delta) {
+        age += delta;
         x += velocityX * delta * 60;
         y += velocityY * delta * 60;
 

@@ -7,12 +7,15 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 import puppy.code.SpaceNavigation;
 import puppy.code.graphics.ParallaxBackground;
 import puppy.code.entities.Nave;
+import puppy.code.entities.enemies.BossEnemy;
 import puppy.code.systems.XPSystem;
 import puppy.code.systems.LevelSystem;
 import puppy.code.systems.CollisionSystem;
@@ -24,6 +27,8 @@ import puppy.code.managers.BonusManager;
 
 public class PantallaJuego implements Screen {
 
+    private static final int MAX_WAVES = 15;
+    
     private SpaceNavigation game;
     private OrthographicCamera camera;    
     private Viewport viewport;
@@ -51,6 +56,22 @@ public class PantallaJuego implements Screen {
     private EnemyManager enemyManager;
     private BonusManager bonusManager;
     private TutorialSystem tutorialSystem;
+    private BossEnemy boss;
+    private boolean bossSpawned = false;
+    private boolean pendingSpawnBoss = false;
+    private boolean waveTransitionInProgress = false;
+    private boolean pendingBossTransition = false;
+    private ShapeRenderer shapeRenderer;
+    private static boolean godModeActive = false;
+    private static float godModeToggleCooldown = 0f;
+    private boolean wasGodModeKeyPressed = false;
+    private static final float GOD_MODE_COOLDOWN_TIME = 5.0f;
+    
+    // Cinematica de entrada del boss
+    private float naveTargetX;
+    private float naveTargetY;
+    private float naveSpeedX;
+    private float naveSpeedY;
 
     public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,  
             int velXAsteroides, int velYAsteroides, int cantAsteroides) {
@@ -80,15 +101,46 @@ public class PantallaJuego implements Screen {
             int velXAsteroides, int velYAsteroides, int cantAsteroides, XPSystem xpSystem, 
             ParallaxBackground existingParallax, float naveX, float naveY, Nave existingNave, 
             puppy.code.managers.BonusManager existingBonusManager) {
+        this(game, ronda, vidas, score, velXAsteroides, velYAsteroides, cantAsteroides,
+             xpSystem, existingParallax, naveX, naveY, existingNave, existingBonusManager, null);
+    }
+    
+    public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,  
+            int velXAsteroides, int velYAsteroides, int cantAsteroides, XPSystem xpSystem, 
+            ParallaxBackground existingParallax, float naveX, float naveY, Nave existingNave, 
+            puppy.code.managers.BonusManager existingBonusManager, BossEnemy existingBoss) {
         this.game = game;
+        
         this.ronda = ronda;
+        
         this.velXAsteroides = velXAsteroides;
         this.velYAsteroides = velYAsteroides;
         this.cantAsteroides = cantAsteroides;
         
+        if (existingBoss != null) {
+            this.boss = existingBoss;
+            this.bossSpawned = true;
+            
+            if (boss.isEntering()) {
+                naveTargetX = (1920 - 66f) / 2f;
+                naveTargetY = 50f;
+                
+                float bossDistance = 1080f - 165f;
+                float bossTime = bossDistance / 100f;
+                
+                float naveDistanceX = Math.abs(naveTargetX - naveX);
+                float naveDistanceY = Math.abs(naveTargetY - naveY);
+                
+                naveSpeedX = naveDistanceX / bossTime;
+                naveSpeedY = naveDistanceY / bossTime;
+            }
+        }
+        
         batch = game.getBatch();
         camera = new OrthographicCamera();    
         camera.setToOrtho(false, 1920, 1080);
+        
+        shapeRenderer = new ShapeRenderer();
         
         viewport = new FitViewport(1920, 1080, camera);
         
@@ -129,7 +181,6 @@ public class PantallaJuego implements Screen {
         explosionSound = Gdx.audio.newSound(Gdx.files.internal("Audio/SFX/Explosions/Boom10.mp3"));
         explosionSound.setVolume(1, 0.5f);
         
-        // Inicializar música según la ronda
         initializeMusic();
 
         int inicialX = (naveX >= 0) ? (int)naveX : Gdx.graphics.getWidth() / 2 - 50;
@@ -144,29 +195,55 @@ public class PantallaJuego implements Screen {
             nave.setVidas(vidas);
         }
         
+        if (godModeActive) {
+            nave.setInvincible(true);
+            
+            if (nave.getShipStats().getDamageMultiplier() < 5.0f) {
+                nave.getShipStats().addDamageUpgrade(4.0f);
+            }
+            
+            for (int i = 0; i < 5; i++) {
+                nave.getShipStats().addHomingUpgrade(0.1f);
+            }
+            
+            for (int i = 0; i < 5; i++) {
+                nave.getShipStats().addBouncingBulletsLevel();
+            }
+        }
+        
         enemyManager = new EnemyManager(nave);
         
         collisionSystem.setNave(nave);
         
         projectileManager.setNave(nave);
         
-        enemyManager.startWave(ronda);
+        if (this.ronda < MAX_WAVES) {
+            enemyManager.startWave(this.ronda);
+        }
     }
     
     public void dibujaEncabezado() {
+        if (boss != null) {
+            return;
+        }
+        
         CharSequence str = "Ronda: " + ronda;
         game.getFont().getData().setScale(2f);
         game.getFont().setColor(1, 1, 1, 1);
         game.getFont().draw(batch, str, 30, 50);
         game.getFont().draw(batch, "Score:" + gameState.getScore(), 1920 - 300, 50);
         game.getFont().draw(batch, "HighScore:" + game.getHighScore(), 1920 / 2 - 150, 50);
-        
-        xpSystem.render(batch, game.getFont(), 1920);
+
+        if (!pendingBossTransition && !isTransitioningToLevelUp) {
+            xpSystem.render(batch, game.getFont(), 1920);
+        }
     }
     
     @Override
     public void render(float delta) {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        
+        checkGodModeToggle();
         
         viewport.apply();
         camera.update();
@@ -176,18 +253,37 @@ public class PantallaJuego implements Screen {
         
         parallaxBackground.update(delta);
         parallaxBackground.render(batch);
+
+        if (boss != null) {
+            boss.update(delta);
+            boss.draw(batch);
+        }
         
         dibujaEncabezado();
         
+        if (boss != null && boss.isEntering()) {
+            nave.setInputBlocked(true);
+        } else {
+            nave.setInputBlocked(false);
+            nave.handleInput(this);
+        }
+        
         nave.update(delta);
-        nave.handleInput(this);
+        
+        if (boss != null && boss.isEntering()) {
+            updateBossCinematic(delta);
+        }
         
         handleShipShooting();
 
         xpSystem.update(delta);
         levelSystem.update();
         
-        if (levelSystem.shouldShowLevelUpScreen() && !isTransitioningToLevelUp) {
+        boolean allowLevelUpInBossRound = (ronda >= MAX_WAVES && !bossSpawned && !pendingSpawnBoss);
+        boolean allowLevelUpForBossTransition = pendingBossTransition;
+        boolean canShowLevelUp = !isTransitioningToLevelUp && (!waveTransitionInProgress || allowLevelUpInBossRound || allowLevelUpForBossTransition) && !pendingSpawnBoss;
+        
+        if (levelSystem.shouldShowLevelUpScreen() && canShowLevelUp) {
             isTransitioningToLevelUp = true;
             int currentScore = gameState.getScore();
             gameMusic.pause();
@@ -196,7 +292,7 @@ public class PantallaJuego implements Screen {
             
             Screen ss = new PantallaUpgrade(game, this, nave, parallaxBackground, 
                                            xpSystem, levelSystem, ronda, currentScore,
-                                           velXAsteroides, velYAsteroides, cantAsteroides, bonusManager);
+                                           velXAsteroides, velYAsteroides, cantAsteroides, bonusManager, boss);
             ss.resize(1920, 1080);
             game.setScreen(ss);
             return;
@@ -204,19 +300,27 @@ public class PantallaJuego implements Screen {
         
         projectileManager.update(delta);
         projectileManager.setEnemies(enemyManager.getActiveEnemies());
-        enemyManager.update(delta);
-        enemyManager.updateEnemyShooting(projectileManager);
-        bonusManager.update(delta);
-        bonusManager.updateShipBehavior(nave);
+        
+        if (boss == null) {
+            enemyManager.update(delta);
+            enemyManager.updateEnemyShooting(projectileManager);
+        }
+
+        if (boss == null || !boss.isEntering()) {
+            bonusManager.update(delta);
+            bonusManager.updateShipBehavior(nave);
+        }
         
         if (!nave.estaHerido()) {
-            collisionSystem.checkProjectileEnemyCollisions(
-                projectileManager.getActiveProjectiles(),
-                enemyManager.getActiveEnemies(),
-                projectileManager
-            );
+            if (boss == null) {
+                collisionSystem.checkProjectileEnemyCollisions(
+                    projectileManager.getActiveProjectiles(),
+                    enemyManager.getActiveEnemies(),
+                    projectileManager
+                );
 
-            collisionSystem.checkShipEnemyCollisions(nave, enemyManager.getActiveEnemies());
+                collisionSystem.checkShipEnemyCollisions(nave, enemyManager.getActiveEnemies());
+            }
             
             collisionSystem.checkEnemyProjectileShipCollisions(
                 projectileManager.getActiveProjectiles(),
@@ -233,6 +337,14 @@ public class PantallaJuego implements Screen {
                 collisionSystem.checkSpinnerProjectileCollisions(
                     nave.getSpinnerSystem(),
                     projectileManager.getActiveProjectiles(),
+                    projectileManager
+                );
+            }
+            
+            if (boss != null) {
+                collisionSystem.checkProjectileBossCollisions(
+                    projectileManager.getActiveProjectiles(),
+                    boss,
                     projectileManager
                 );
             }
@@ -254,13 +366,19 @@ public class PantallaJuego implements Screen {
             bonusManager.getActiveBonusType() == puppy.code.entities.bonus.BonusType.SHIELD) {
             bonusManager.getActiveBonus().renderEffect(batch, nave);
         }
-        
-        nave.renderHealthHearts(batch);
-        
-        nave.renderHomingIndicator(batch);
-        
+
+        if (boss == null || !boss.isEntering()) {
+            nave.renderHealthHearts(batch);
+        }
+
+        if (boss == null || !boss.isEntering()) {
+            nave.renderHomingIndicator(batch);
+        }
+
         if (nave.getTurboSystem() != null) {
-            nave.getTurboSystem().render(batch);
+            if (boss == null || !boss.isEntering()) {
+                nave.getTurboSystem().render(batch);
+            }
         }
         
         if (tutorialSystem != null) {
@@ -269,6 +387,17 @@ public class PantallaJuego implements Screen {
         }
         
         batch.end();
+        
+        if (boss != null && !boss.isEntering()) {
+            renderBossHealthBar();
+            if (boss.isDestroyed()) {
+                Screen ss = new PantallaGameWin(game);
+                ss.resize(1920, 1080);
+                game.setScreen(ss);
+                dispose();
+                return;
+            }
+        }
         
         if (nave.estaDestruido()) {
             int currentScore = gameState.getScore();
@@ -281,41 +410,141 @@ public class PantallaJuego implements Screen {
             return;
         }
 
-        if (enemyManager.isWaveComplete()) {
+        if (boss != null) {
+            return;
+        }
+
+        if (pendingSpawnBoss) {
+            return;
+        }
+
+        boolean isWaveComplete = enemyManager.isWaveComplete();
+        boolean allowBossRoundEntry = (ronda >= MAX_WAVES && !bossSpawned && waveTransitionInProgress);
+        
+        if (isWaveComplete && (!waveTransitionInProgress || allowBossRoundEntry)) {
+            if (!waveTransitionInProgress) {
+                waveTransitionInProgress = true;
+            }
+            
             if (tutorialSystem != null) {
                 tutorialSystem.startFadeOut();
             }
             
             int currentScore = gameState.getScore();
             if (xpSystem != null) {
-                xpSystem.forceLevelUp();
+                if (!xpSystem.hasLeveledUp() && !levelSystem.shouldShowLevelUpScreen()) {
+                    xpSystem.forceLevelUp();
+                }
             }
             
             float currentNaveX = nave.getX();
             float currentNaveY = nave.getY();
             
-            // Verificar si necesitamos cambiar la música para la próxima ronda
             int nextRound = ronda + 1;
+            if (nextRound > MAX_WAVES) {
+                gameMusic.stop();
+                bonusManager.forceExpireBonus(nave);
+                
+                Screen bossScreen = new PantallaBoss(game, nave, xpSystem,
+                                                     parallaxBackground, currentScore, bonusManager,
+                                                     projectileManager);
+                bossScreen.resize(1920, 1080);
+                game.setScreen(bossScreen);
+                return;
+            }
+            
+            if (ronda == 14) {
+                pendingBossTransition = true;
+                return;
+            }
+            
             String nextMusicPath = getMusicPathForRound(nextRound);
             if (!nextMusicPath.equals(currentMusicPath)) {
-                // Parar la música actual antes de crear la nueva pantalla
                 if (gameMusic != null) {
                     gameMusic.stop();
                 }
             }
             
             shouldDisposeParallax = false;
-            Screen ss = new PantallaJuego(game, nextRound, nave.getVidas(), currentScore, 
+            if (nextRound < MAX_WAVES) {
+                waveTransitionInProgress = false;
+            }
+            PantallaJuego newScreen = new PantallaJuego(game, nextRound, nave.getVidas(), currentScore, 
                     velXAsteroides + 3, velYAsteroides + 3, cantAsteroides + 10, xpSystem, parallaxBackground,
                     currentNaveX, currentNaveY, nave);
-            ss.resize(1920, 1080);
-            game.setScreen(ss);
+            
+            if (nextRound >= MAX_WAVES) {
+                newScreen.waveTransitionInProgress = true;
+            }
+            
+            newScreen.resize(1920, 1080);
+            game.setScreen(newScreen);
             gameMusic.dispose();
         }
     }
     
+    private void renderBossHealthBar() {
+        float barWidth = 1200f;
+        float barHeight = 30f;
+        float barX = (1920 - barWidth) / 2f;
+        float barY = 1020f;
+        
+        float healthPercentage = (float) boss.getHealth() / boss.getMaxHealth();
+        float currentBarWidth = barWidth * healthPercentage;
+        
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        
+        shapeRenderer.setColor(0f, 0f, 0f, 1f);
+        shapeRenderer.rect(barX, barY, barWidth, barHeight);
+
+        BossEnemy.BossState state = boss.getCurrentState();
+        if (state == BossEnemy.BossState.PHASE_1) {
+            shapeRenderer.setColor(0.6f, 0.2f, 0.8f, 1f);
+        } else if (state == BossEnemy.BossState.PHASE_2) {
+            shapeRenderer.setColor(0.8f, 0.3f, 0.3f, 1f);
+        } else if (state == BossEnemy.BossState.PHASE_3) {
+            shapeRenderer.setColor(0.9f, 0.7f, 0.1f, 1f);
+        }
+
+        shapeRenderer.rect(barX, barY, currentBarWidth, barHeight);
+        
+        shapeRenderer.setColor(0.2f, 0.2f, 0.2f, 1f);
+        float divider1X = barX + (barWidth * 0.333f);
+        float divider2X = barX + (barWidth * 0.666f);
+        shapeRenderer.rectLine(divider1X, barY, divider1X, barY + barHeight, 3f);
+        shapeRenderer.rectLine(divider2X, barY, divider2X, barY + barHeight, 3f);
+        
+        shapeRenderer.end();
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(0.8f, 0.8f, 0.8f, 1f);
+        shapeRenderer.rect(barX, barY, barWidth, barHeight);
+        shapeRenderer.end();
+    }
+    
     @Override
     public void show() {
+        if (gameMusic != null && !gameMusic.isPlaying()) {
+            gameMusic.play();
+        }
+    }
+
+    public void onReturnFromUpgrade() {
+        this.isTransitioningToLevelUp = false;
+        levelSystem.levelUpScreenShown();
+        
+        if (pendingBossTransition) {
+            gameMusic.stop();
+            bonusManager.forceExpireBonus(nave);
+            
+            Screen bossScreen = new PantallaBoss(game, nave, xpSystem,
+                                                 parallaxBackground, gameState.getScore(), bonusManager,
+                                                 projectileManager);
+            bossScreen.resize(1920, 1080);
+            game.setScreen(bossScreen);
+            return;
+        }
+        
         if (gameMusic != null && !gameMusic.isPlaying()) {
             gameMusic.play();
         }
@@ -352,6 +581,14 @@ public class PantallaJuego implements Screen {
     }
     
     private void handleShipShooting() {
+        if (boss != null && boss.isEntering()) {
+            if (nave.isShooting()) {
+                nave.stopShooting();
+            }
+            if (Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.SPACE)) {}
+            return;
+        }
+        
         if (nave.canShoot()) {
             nave.executeShoot(projectileManager);
             nave.resetShotCooldown();
@@ -388,14 +625,15 @@ public class PantallaJuego implements Screen {
             bonusManager.dispose();
         }
         
+        if (shapeRenderer != null) {
+            shapeRenderer.dispose();
+        }
+        
         if (tutorialSystem != null) {
             tutorialSystem.dispose();
         }
     }
     
-    /**
-     * Inicializa la música según la ronda actual
-     */
     private void initializeMusic() {
         String musicPath = getMusicPathForRound(ronda);
         currentMusicPath = musicPath;
@@ -414,12 +652,6 @@ public class PantallaJuego implements Screen {
         }
     }
     
-    /**
-     * Obtiene la ruta de la música según la ronda
-     * Rondas 1-4: Audio/Music/NombreProyecto - 1 chill.mp3 (música chill)
-     * Rondas 5-8: Audio/Music/NombreProyecto - 2 medio.mp3 (música medio)
-     * Rondas 9+: Audio/Music/NombreProyecto - 3 epic.mp3 (música épica)
-     */
     private String getMusicPathForRound(int round) {
         if (round >= 1 && round <= 4) {
             return "Audio/Music/NombreProyecto - 1 chill.mp3";
@@ -430,21 +662,15 @@ public class PantallaJuego implements Screen {
         }
     }
     
-    /**
-     * Cambia la música si es necesario según la ronda actual
-     */
     private void updateMusicForRound() {
         String newMusicPath = getMusicPathForRound(ronda);
         
-        // Solo cambiar si la música es diferente
         if (!newMusicPath.equals(currentMusicPath)) {
-            // Detener música actual
             if (gameMusic != null) {
                 gameMusic.stop();
                 gameMusic.dispose();
             }
             
-            // Cargar nueva música
             try {
                 currentMusicPath = newMusicPath;
                 gameMusic = Gdx.audio.newMusic(Gdx.files.internal(newMusicPath));
@@ -459,6 +685,95 @@ public class PantallaJuego implements Screen {
                 currentTrack = null;
             }
         }
+    }
+    
+    private void spawnBoss() {
+        TextureAtlas bossAtlas = new TextureAtlas(Gdx.files.internal("Game/Enemys/Boss/Agiss.atlas"));
+        boss = new BossEnemy(0, 0, bossAtlas, 1000);
+        bossSpawned = true;
+        
+        naveTargetX = (1920 - nave.getWidth()) / 2f;
+        naveTargetY = 50f;
+        
+        float bossDistance = 1080f - 165f;
+        float bossTime = bossDistance / 100f;
+        
+        float naveDistanceX = Math.abs(naveTargetX - nave.getSpriteX());
+        float naveDistanceY = Math.abs(naveTargetY - nave.getSpriteY());
+        
+        naveSpeedX = naveDistanceX / bossTime;
+        naveSpeedY = naveDistanceY / bossTime;
+    }
+    
+    private void checkGodModeToggle() {
+        if (godModeToggleCooldown > 0) {
+            godModeToggleCooldown -= Gdx.graphics.getDeltaTime();
+            return;
+        }
+        
+        boolean ctrlPressed = Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.CONTROL_LEFT) ||
+                              Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.CONTROL_RIGHT);
+        boolean pPressed = Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.P);
+        boolean bothPressed = ctrlPressed && pPressed;
+        
+        if (bothPressed && !wasGodModeKeyPressed) {
+            wasGodModeKeyPressed = true;
+            godModeToggleCooldown = GOD_MODE_COOLDOWN_TIME;
+            godModeActive = !godModeActive;
+            
+            if (godModeActive) {
+                nave.setInvincible(true);
+                
+                if (nave.getShipStats().getDamageMultiplier() < 5.0f) {
+                    nave.getShipStats().addDamageUpgrade(4.0f);
+                }
+                
+                for (int i = 0; i < 5; i++) {
+                    nave.getShipStats().addHomingUpgrade(0.1f);
+                }
+                
+                for (int i = 0; i < 5; i++) {
+                    nave.getShipStats().addBouncingBulletsLevel();
+                }
+            } else {
+                nave.setInvincible(false);
+            }
+        }
+        
+        if (!bothPressed) {
+            wasGodModeKeyPressed = false;
+        }
+    }
+    
+    private void updateBossCinematic(float delta) {
+        
+        float currentX = nave.getSpriteX();
+        float currentY = nave.getSpriteY();
+        
+        float newX = currentX;
+        float newY = currentY;
+        
+        if (Math.abs(currentX - naveTargetX) > 1f) {
+            if (currentX < naveTargetX) {
+                newX = currentX + naveSpeedX * delta;
+            } else {
+                newX = currentX - naveSpeedX * delta;
+            }
+        } else {
+            newX = naveTargetX;
+        }
+        
+        if (Math.abs(currentY - naveTargetY) > 1f) {
+            if (currentY < naveTargetY) {
+                newY = currentY + naveSpeedY * delta;
+            } else {
+                newY = currentY - naveSpeedY * delta;
+            }
+        } else {
+            newY = naveTargetY;
+        }
+        
+        nave.setPosition(newX, newY);
     }
     
     public ProjectileManager getProjectileManager() {

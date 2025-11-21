@@ -109,7 +109,6 @@ public class BonusManager {
         if (currentState == BonusState.FALLING && activeBonus != null) {
             activeBonus.collect();
             
-            // Reproducir sonido según el tipo de bonus
             playBonusSound(activeBonusType);
             
             if (activeBonusType != BonusType.HEAL) {
@@ -220,9 +219,6 @@ public class BonusManager {
             if (nave.getShootingBehavior() != null) {
                 nave.setBonusShootingBehavior(null);
             }
-            if (nave.isInvincible()) {
-                nave.setInvincible(false);
-            }
         }
     }
     
@@ -247,7 +243,6 @@ public class BonusManager {
     }
     
     public void saveState() {
-        // Guardar tiempo restante para poder restaurarlo
     }
     
     public void forceExpireBonus(puppy.code.entities.Nave nave) {
@@ -257,9 +252,6 @@ public class BonusManager {
         }
     }
     
-    /**
-     * Reproduce el sonido apropiado según el tipo de bonus recogido
-     */
     private void playBonusSound(BonusType bonusType) {
         try {
             Sound bonusSound;
@@ -276,7 +268,7 @@ public class BonusManager {
                     bonusSound = resourceManager.getSound("Audio/SFX/Player/powerUp.mp3");
                     break;
             }
-            bonusSound.play(0.7f); // Volumen al 70%
+            bonusSound.play(0.7f);
         } catch (Exception e) {
             System.out.println("Error reproduciendo sonido de bonus: " + e.getMessage());
         }

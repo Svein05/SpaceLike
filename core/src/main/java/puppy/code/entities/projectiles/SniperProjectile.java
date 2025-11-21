@@ -22,6 +22,7 @@ public class SniperProjectile extends Projectile {
 
     @Override
     public void update(float delta) {
+        age += delta;
         x += direction.x * speed * delta;
         y += direction.y * speed * delta;
         

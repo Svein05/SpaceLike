@@ -52,6 +52,8 @@ public class Nave extends GameObject {
     private boolean homingEnabled = true;
     private boolean cKeyPressed = false;
     
+    private boolean inputBlocked = false;
+    
     // Sistema de corazones
     private HealthSystem healthSystem;
     
@@ -112,7 +114,6 @@ public class Nave extends GameObject {
         sonidoHerido = soundChoque;
         spr = new Sprite(tx);
         
-        // Configurar tamaño escalado inicial 
         float scale = 2.0f;
         float scaledWidth = tx.getWidth() * scale;
         float scaledHeight = tx.getHeight() * scale;
@@ -126,7 +127,6 @@ public class Nave extends GameObject {
         
         spr = new Sprite();
         
-        // Configurar tamaño
         float scaledWidth = 96f;
         float scaledHeight = 96f;
         
@@ -137,7 +137,6 @@ public class Nave extends GameObject {
         this.width = scaledWidth;
         this.height = scaledHeight;
         
-        // Configurar sprite con dimensiones escaladas
         spr.setPosition(x, y);
         spr.setSize(scaledWidth, scaledHeight);
         
@@ -251,9 +250,16 @@ public class Nave extends GameObject {
     public void update(float delta) {
         updateShipTexture();
         
-        // Actualizar arma
         if (currentWeapon != null) {
             currentWeapon.update(delta);
+        }
+        
+        if (inputBlocked) {
+            velocidadX = 0f;
+            velocidadY = 0f;
+            turboSystem.regenerateStamina(delta);
+            updateShootingAnimation(delta);
+            return;
         }
         
         if (!herido) {
@@ -288,13 +294,11 @@ public class Nave extends GameObject {
                 cKeyPressed = false;
             }
             
-            // Detectar disparo continuo
             if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
                 if (!isShooting) {
                     startShooting();
                 }
             } else {
-                // Dejar de disparar cuando se suelta SPACE
                 if (isShooting) {
                     stopShooting();
                 }
@@ -368,14 +372,14 @@ public class Nave extends GameObject {
         }
     }
     
-    private void startShooting() {
+    public void startShooting() {
         if (!isShooting) {
             isShooting = true;
             shootingAnimationTime = 0f;
         }
     }
     
-    private void stopShooting() {
+    public void stopShooting() {
         isShooting = false;
         shootingAnimationTime = 0f;
     }
@@ -426,6 +430,8 @@ public class Nave extends GameObject {
     
     public float getX() { return x; }
     public float getY() { return y; }
+    public float getSpriteX() { return spr.getX(); }
+    public float getSpriteY() { return spr.getY(); }
     public float getWidth() { return targetWidth; }
     public float getHeight() { return targetHeight; }
     
@@ -447,14 +453,13 @@ public class Nave extends GameObject {
     
     private void executeBasicShoot(puppy.code.managers.ProjectileManager projectileManager) {
         float effectiveSpeed = shipStats.getEffectiveProjectileSpeed(puppy.code.entities.projectiles.ProjectileType.BULLET);
-        // Solo reproducir sonido en el disparo básico (primera bala)
         projectileManager.createProjectile(
             puppy.code.entities.projectiles.ProjectileType.BULLET,
             getCenterShootX(), 
             getCenterShootY(), 
             0, 
             effectiveSpeed,
-            true  // Reproducir sonido solo aquí
+            true
         );
     }
 
@@ -473,7 +478,6 @@ public class Nave extends GameObject {
         drawLifeStateLayer(batch, drawX, drawY);
         
         if (DEBUG_DRAW_HITBOX) {
-            // Cerrar batch para usar ShapeRenderer
             batch.end();
             shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
             shapeRenderer.begin(ShapeType.Line);
@@ -560,16 +564,21 @@ public class Nave extends GameObject {
     
     private String getLifeStateRegionName() {
         float currentHealth = healthSystem.getCurrentHealth();
+        float maxHealth = shipStats.getMaxHearts();
+        float healthPercentage = currentHealth / maxHealth;
         
-        if (currentHealth >= 5.5f) {
-            return "Main Ship - Base - Full health";
-        } else if (currentHealth >= 3.5f) {
-            return "Main Ship - Base - Slight damage";
-        } else if (currentHealth >= 1.5f) {
-            return "Main Ship - Base - Damaged";
+        String regionName;
+        if (healthPercentage >= 0.92f) {
+            regionName = "Main Ship - Base - Full health";
+        } else if (healthPercentage >= 0.58f) {
+            regionName = "Main Ship - Base - Slight damage";
+        } else if (healthPercentage >= 0.25f) {
+            regionName = "Main Ship - Base - Damaged";
         } else {
-            return "Main Ship - Base - Very damaged";
+            regionName = "Main Ship - Base - Very damaged";
         }
+        
+        return regionName;
     }
 
     @Override
@@ -624,16 +633,18 @@ public class Nave extends GameObject {
                 b.velocityY = -Math.abs(b.velocityY);
             }
             
-            healthSystem.takeDamage();
-            herido = true;
-            tiempoHerido = tiempoHeridoMax;
-            
-            velocidadX = 0f;
-            velocidadY = 0f;
-            
-            sonidoHerido.play();
-            if (healthSystem.isDead()) 
-                destruida = true; 
+            if (!invincible) {
+                healthSystem.takeDamage();
+                herido = true;
+                tiempoHerido = tiempoHeridoMax;
+                
+                velocidadX = 0f;
+                velocidadY = 0f;
+                
+                sonidoHerido.play();
+                if (healthSystem.isDead()) 
+                    destruida = true;
+            }
             return true;
         }
         return false;
@@ -669,16 +680,18 @@ public class Nave extends GameObject {
                 }
             }
             
-            healthSystem.takeDamage();
-            herido = true;
-            tiempoHerido = tiempoHeridoMax;
-            
-            velocidadX = 0f;
-            velocidadY = 0f;
-            
-            sonidoHerido.play();
-            if (healthSystem.isDead()) 
-                destruida = true; 
+            if (!invincible) {
+                healthSystem.takeDamage();
+                herido = true;
+                tiempoHerido = tiempoHeridoMax;
+                
+                velocidadX = 0f;
+                velocidadY = 0f;
+                
+                sonidoHerido.play();
+                if (healthSystem.isDead()) 
+                    destruida = true;
+            }
             return true;
         }
         return false;
@@ -765,6 +778,17 @@ public class Nave extends GameObject {
     
     public void setInvincible(boolean invincible) {
         this.invincible = invincible;
+    }
+    
+    public void setInputBlocked(boolean blocked) {
+        this.inputBlocked = blocked;
+    }
+    
+    @Override
+    public void setPosition(float x, float y) {
+        this.x = x;
+        this.y = y;
+        spr.setPosition(x, y);
     }
     
     public void dispose() {

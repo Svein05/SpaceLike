@@ -7,6 +7,8 @@ PRIORIDAD ALTA
 [ ] Cambiar sprite temporal azul de BonusHeal por sprite final
 [ ] Revisar spawn rate de enemigos en rondas avanzadas
 [ ] Revisar bonus de amplificacion de dano
+[ ] Revisar metodos / codigo obsoletos
+
 UPGRADES PENDIENTES
 --------------------------------------------------------------------------------
 [ ] Velocidad de Movimiento - Aumenta velocidad de la nave en 15%
@@ -124,6 +126,7 @@ EJEMPLOS DE USO EN CODIGO:
   // TODO: @performance Optimizar loop principal
   // BUG: #42 Colisiones no detectan correctamente
   // TODO: (elias) Revisar sprites finales
+  // TEST: prueba
 
 CONFIGURACION EN settings.json:
   "todo-tree.general.tags": [
