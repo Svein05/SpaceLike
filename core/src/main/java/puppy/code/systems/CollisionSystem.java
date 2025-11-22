@@ -41,6 +41,7 @@ public class CollisionSystem {
                 
                 if (projectile.getBounds().overlaps(enemy.getBounds())) {
                     enemy.takeDamage(projectile.getDamage());
+                    enemy.addHitSticker();
                     
                         if (enemy.isDestroyed()) {
                             gameState.addScore(enemy.getScoreValue());
@@ -99,6 +100,7 @@ public class CollisionSystem {
                     }
                     
                     enemy.takeDamage(finalDamage);
+                    enemy.addHitSticker();
                     projectile.addHitEnemy(enemy);
 
                     if (enemy.isDestroyed()) {
@@ -119,6 +121,11 @@ public class CollisionSystem {
                     }
                     
                     if (projectile.getRemainingBounces() > 0) {
+                        int aliveEnemiesCount = 0;
+                        for (Enemy e : enemies) {
+                            if (!e.isDestroyed()) aliveEnemiesCount++;
+                        }
+                        
                         Enemy nextTarget = findNearestEnemy(projectile, enemies);
                         if (nextTarget != null) {
                             float speed = (float) Math.sqrt(
@@ -135,6 +142,28 @@ public class CollisionSystem {
                                 ((puppy.code.entities.projectiles.Bullet) projectile).setTargetEnemy(nextTarget);
                             }
                             break;
+                        } else {
+                            if (aliveEnemiesCount > projectile.getHitEnemies().size()) {
+                                projectile.clearHitEnemies();
+                                Enemy recycledTarget = findNearestEnemy(projectile, enemies);
+                                
+                                if (recycledTarget != null) {
+                                    float speed = (float) Math.sqrt(
+                                        projectile.velocityX * projectile.velocityX + 
+                                        projectile.velocityY * projectile.velocityY
+                                    );
+                                    float targetCenterX = recycledTarget.getX() + recycledTarget.getWidth() / 2;
+                                    float targetCenterY = recycledTarget.getY() + recycledTarget.getHeight() / 2;
+                                    
+                                    projectile.redirectTo(targetCenterX, targetCenterY, speed);
+                                    projectile.consumeBounce();
+                                    
+                                    if (projectile instanceof puppy.code.entities.projectiles.Bullet) {
+                                        ((puppy.code.entities.projectiles.Bullet) projectile).setTargetEnemy(recycledTarget);
+                                    }
+                                    break;
+                                }
+                            }
                         }
                     }
                     
@@ -227,6 +256,7 @@ public class CollisionSystem {
                 
                 if (spinner.getBounds().overlaps(enemy.getBounds())) {
                     enemy.takeDamage(spinnerDamage);
+                    enemy.addHitSticker();
                     
                     if (enemy.isDestroyed()) {
                         if (!(enemy instanceof puppy.code.entities.enemies.MeteoriteEnemy)) {

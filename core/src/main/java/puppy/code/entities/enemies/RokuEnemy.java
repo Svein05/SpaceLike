@@ -4,6 +4,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
+import puppy.code.graphics.HitSticker;
+import puppy.code.managers.ResourceManager;
 
 public class RokuEnemy extends Enemy {
     private Sprite sprite;
@@ -55,11 +57,21 @@ public class RokuEnemy extends Enemy {
                 sprite.setColor(1f, 1f, 1f, 1f);
             }
         }
+        
+        updateHitStickers(delta);
     }
 
     @Override
     public void draw(SpriteBatch batch) {
         sprite.draw(batch);
+        
+        Texture hitTexture = ResourceManager.getInstance().getTexture("UI/Hit/Hitmarket.png");
+        com.badlogic.gdx.graphics.Color oldColor = batch.getColor().cpy();
+        batch.setColor(1f, 1f, 1f, 0.75f);
+        for (HitSticker sticker : hitStickers) {
+            sticker.render(batch, hitTexture, x, y, width, height);
+        }
+        batch.setColor(oldColor);
     }
 
     @Override

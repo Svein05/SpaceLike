@@ -44,6 +44,7 @@ public abstract class Projectile extends GameObject {
     public HashSet<Object> getHitEnemies() { return hitEnemies; }
     public void addHitEnemy(Object enemy) { hitEnemies.add(enemy); }
     public boolean hasHitEnemy(Object enemy) { return hitEnemies.contains(enemy); }
+    public void clearHitEnemies() { hitEnemies.clear(); }
     
     public void consumeBounce() {
         if (remainingBounces > 0) {

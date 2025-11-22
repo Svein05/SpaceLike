@@ -50,13 +50,12 @@ public class PantallaUpgrade implements Screen {
     private float naveX;
     private float naveY;
     private puppy.code.managers.BonusManager bonusManager;
-    private BossEnemy boss;
     
     public PantallaUpgrade(SpaceNavigation game, PantallaJuego pantallaJuego, 
                           Nave nave, ParallaxBackground parallax, XPSystem xpSystem,
                           LevelSystem levelSystem, int ronda, int score, 
                           int velXAsteroides, int velYAsteroides, int cantAsteroides,
-                          puppy.code.managers.BonusManager bonusManager, BossEnemy boss) {
+                          puppy.code.managers.BonusManager bonusManager) {
         this.game = game;
         this.nave = nave;
         this.parallaxBackground = parallax;
@@ -68,7 +67,6 @@ public class PantallaUpgrade implements Screen {
         this.velYAsteroides = velYAsteroides;
         this.cantAsteroides = cantAsteroides;
         this.bonusManager = bonusManager;
-        this.boss = boss;
         this.naveX = nave.getX();
         this.naveY = nave.getY();
         this.originScreen = pantallaJuego;
@@ -102,7 +100,6 @@ public class PantallaUpgrade implements Screen {
         this.velYAsteroides = 0;
         this.cantAsteroides = 0;
         this.bonusManager = bonusManager;
-        this.boss = boss;
         this.naveX = nave.getX();
         this.naveY = nave.getY();
         this.originScreen = null;
@@ -253,7 +250,7 @@ public class PantallaUpgrade implements Screen {
 
         Screen ss = new PantallaJuego(game, ronda, nave.getVidas(), score,
                                      velXAsteroides, velYAsteroides, cantAsteroides,
-                                     xpSystem, parallaxBackground, naveX, naveY, nave, bonusManager, boss);
+                                     xpSystem, parallaxBackground, naveX, naveY, nave, bonusManager);
         ss.resize(1920, 1080);
         game.setScreen(ss);
     }

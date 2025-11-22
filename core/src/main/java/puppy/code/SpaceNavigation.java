@@ -4,7 +4,6 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import puppy.code.screens.PantallaMenu;
 import puppy.code.managers.ResourceManager;
 import puppy.code.managers.GameStateManager;
 
@@ -25,7 +24,11 @@ public class SpaceNavigation extends Game {
         // Precargar recursos comunes
         resourceManager.preloadCommonResources();
         
+        // TEST: Empezar en ronda 12
+        Screen ss = new puppy.code.screens.PantallaJuego(this, 12, 5, 0, 4, 5, 10);
+        /* CODIGO ORIGINAL - Descomentar despues de testear
         Screen ss = new PantallaMenu(this);
+        */
         this.setScreen(ss);
     }
 

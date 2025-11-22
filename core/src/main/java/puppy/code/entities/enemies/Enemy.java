@@ -1,6 +1,8 @@
 package puppy.code.entities.enemies;
 
+import com.badlogic.gdx.utils.Array;
 import puppy.code.entities.GameObject;
+import puppy.code.graphics.HitSticker;
 import puppy.code.interfaces.EnemyWeapon;
 import puppy.code.interfaces.MovementBehavior;
 import puppy.code.managers.ProjectileManager;
@@ -13,11 +15,14 @@ public abstract class Enemy extends GameObject {
     protected EnemyWeapon weapon;
     protected MovementBehavior movementBehavior;
     
+    protected Array<HitSticker> hitStickers;
+    
     public Enemy(float x, float y, float width, float height, int health, float speed) {
         super(x, y, width, height);
         this.health = health;
         this.speed = speed;
         this.destroyed = false;
+        this.hitStickers = new Array<>();
     }
     
     public abstract void takeDamage(int damage);
@@ -48,6 +53,31 @@ public abstract class Enemy extends GameObject {
         if (weapon != null && weapon.canShoot()) {
             weapon.shoot(this, projectileManager);
         }
+    }
+    
+    public void addHitSticker() {
+        hitStickers.add(new HitSticker());
+        
+        try {
+            puppy.code.managers.ResourceManager.getInstance()
+                .getSound("Audio/SFX/Hit/Hitmaker.ogg").play(0.6f);
+        } catch (Exception e) {
+        }
+    }
+    
+    public void updateHitStickers(float delta) {
+        for (int i = hitStickers.size - 1; i >= 0; i--) {
+            HitSticker sticker = hitStickers.get(i);
+            sticker.update(delta);
+            
+            if (sticker.isExpired()) {
+                hitStickers.removeIndex(i);
+            }
+        }
+    }
+    
+    public Array<HitSticker> getHitStickers() {
+        return hitStickers;
     }
     
     public void updateWeapon(float delta) {

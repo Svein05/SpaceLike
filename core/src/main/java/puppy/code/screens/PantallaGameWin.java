@@ -20,7 +20,6 @@ public class PantallaGameWin implements Screen {
     private ParallaxBackground parallaxBackground;
     private GlyphLayout layout;
     private Texture winTexture;
-    private float timer;
 
     public PantallaGameWin(SpaceNavigation game) {
         this.game = game;
@@ -29,7 +28,6 @@ public class PantallaGameWin implements Screen {
         viewport = new FitViewport(1920, 1080, camera);
         parallaxBackground = new ParallaxBackground();
         layout = new GlyphLayout();
-        timer = 0f;
         loadWinTexture();
     }
 
@@ -47,7 +45,6 @@ public class PantallaGameWin implements Screen {
 
     @Override
     public void render(float delta) {
-        timer += delta;
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         viewport.apply();
         camera.update();

@@ -8,6 +8,8 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import puppy.code.entities.effects.ExplosionAnimation;
+import puppy.code.graphics.HitSticker;
+import puppy.code.managers.ResourceManager;
 
 public class MeteoriteEnemy extends Enemy {
     private Sprite spr;
@@ -129,6 +131,7 @@ public class MeteoriteEnemy extends Enemy {
         }
         
         updateSpriteByHealth();
+        updateHitStickers(delta);
     }
 
     @Override
@@ -137,6 +140,14 @@ public class MeteoriteEnemy extends Enemy {
             explosionAnimation.render(batch);
         } else {
             spr.draw(batch);
+            
+            Texture hitTexture = ResourceManager.getInstance().getTexture("UI/Hit/Hitmarket.png");
+            com.badlogic.gdx.graphics.Color oldColor = batch.getColor().cpy();
+            batch.setColor(1f, 1f, 1f, 0.75f);
+            for (HitSticker sticker : hitStickers) {
+                sticker.render(batch, hitTexture, x, y, width, height);
+            }
+            batch.setColor(oldColor);
         }
     }
 

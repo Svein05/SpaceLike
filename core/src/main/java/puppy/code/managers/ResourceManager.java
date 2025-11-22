@@ -85,8 +85,10 @@ public class ResourceManager {
     
     public void preloadCommonResources() {
         getTexture("Rocket2.png");
+        getTexture("UI/Hit/Hitmarket.png");
         
         getSound("hurt.ogg");
+        getSound("Audio/SFX/Hit/Hitmaker.ogg");
         getSound("Audio/SFX/Player/powerUp.mp3");
         getSound("Audio/SFX/Player/PowerUp34.mp3");
         getSound("Audio/SFX/Player/PowerUp6.mp3");

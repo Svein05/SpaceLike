@@ -5,6 +5,8 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import puppy.code.entities.Nave;
+import puppy.code.graphics.HitSticker;
+import puppy.code.managers.ResourceManager;
 
 public class ChargerEnemy extends Enemy {
     private Sprite sprite;
@@ -66,6 +68,8 @@ public class ChargerEnemy extends Enemy {
                 }
             }
         }
+        
+        updateHitStickers(delta);
     }
     
     private void respawnFromTop() {
@@ -79,6 +83,14 @@ public class ChargerEnemy extends Enemy {
     public void draw(SpriteBatch batch) {
         sprite.setPosition(x, y);
         sprite.draw(batch);
+        
+        Texture hitTexture = ResourceManager.getInstance().getTexture("UI/Hit/Hitmarket.png");
+        com.badlogic.gdx.graphics.Color oldColor = batch.getColor().cpy();
+        batch.setColor(1f, 1f, 1f, 0.75f);
+        for (HitSticker sticker : hitStickers) {
+            sticker.render(batch, hitTexture, x, y, width, height);
+        }
+        batch.setColor(oldColor);
     }
 
     @Override

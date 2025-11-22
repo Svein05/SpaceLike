@@ -14,10 +14,13 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import puppy.code.SpaceNavigation;
 import puppy.code.entities.Nave;
 import puppy.code.entities.enemies.BossEnemy;
+import puppy.code.entities.enemies.BossPatternType;
+import puppy.code.entities.projectiles.BossBullet;
 import puppy.code.graphics.ParallaxBackground;
 import puppy.code.managers.BonusManager;
 import puppy.code.managers.GameStateManager;
 import puppy.code.managers.ProjectileManager;
+import puppy.code.systems.BossPatternExecutor;
 import puppy.code.systems.CollisionSystem;
 import puppy.code.systems.XPSystem;
 
@@ -39,6 +42,7 @@ public class PantallaBoss implements Screen {
     private ProjectileManager projectileManager;
     private BonusManager bonusManager;
     private GameStateManager gameState;
+    private BossPatternExecutor patternExecutor;
     
     // Background
     private ParallaxBackground parallaxBackground;
@@ -74,6 +78,7 @@ public class PantallaBoss implements Screen {
         this.collisionSystem = new CollisionSystem(xpSystem);
         this.gameState = GameStateManager.getInstance();
         this.gameState.setScore(score);
+        this.patternExecutor = new BossPatternExecutor();
         
         spawnBoss();
         
@@ -131,7 +136,10 @@ public class PantallaBoss implements Screen {
         if (!boss.isEntering()) {
             nave.update(delta);
             handleShipShooting();
+            updateBossPatterns(delta);
         }
+        
+        patternExecutor.update(delta);
         
         projectileManager.update(delta);
         projectileManager.setEnemies(new java.util.ArrayList<>());
@@ -158,6 +166,19 @@ public class PantallaBoss implements Screen {
             
             checkBonusCollisions();
         }
+        
+        parallaxBackground.render(batch);
+        
+        batch.end();
+        
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        for (BossBullet bullet : patternExecutor.getBossBullets()) {
+            bullet.render(shapeRenderer);
+        }
+        shapeRenderer.end();
+        
+        batch.begin();
         
         boss.draw(batch);
         
@@ -275,6 +296,18 @@ public class PantallaBoss implements Screen {
         if (nave.canShoot()) {
             nave.executeShoot(projectileManager);
             nave.resetShotCooldown();
+        }
+    }
+    
+    private void updateBossPatterns(float delta) {
+        if (boss.getCurrentState() == BossEnemy.BossState.PHASE_1) {
+            boss.updatePatternTimer(delta);
+            
+            if (boss.getPatternTimer() >= boss.getEffectiveCooldown()) {
+                patternExecutor.executePattern(boss, BossPatternType.RADIAL_ROTATING);
+                boss.onShotFired();
+                boss.resetPatternTimer();
+            }
         }
     }
     
